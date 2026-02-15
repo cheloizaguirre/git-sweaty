@@ -448,7 +448,6 @@ function buildSectionLayoutPlan(list) {
       .filter((width) => width > 0);
     const graphCount = columnWidths.length;
     const totalFrequencyGraphWidth = columnWidths.reduce((sum, width) => sum + width, 0);
-
     if (!graphRailWidth && totalFrequencyGraphWidth > 0) {
       const baseGap = readCssVar("--frequency-graph-gap-base", 12, frequencyCard);
       graphRailWidth = totalFrequencyGraphWidth + (Math.max(0, graphCount - 1) * baseGap);
@@ -457,7 +456,7 @@ function buildSectionLayoutPlan(list) {
     if (graphRailWidth > 0 && totalFrequencyGraphWidth > 0) {
       const totalGap = Math.max(0, graphRailWidth - totalFrequencyGraphWidth);
       if (graphCount > 1) {
-        // Use subpixel gaps so we don't need trailing right padding that can create tiny overflow scroll.
+        // Fill the entire shared rail by distributing gap width between frequency columns.
         frequencyGap = totalGap / (graphCount - 1);
         frequencyPadRight = 0;
       } else {
