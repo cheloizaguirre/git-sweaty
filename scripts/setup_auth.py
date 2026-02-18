@@ -1229,31 +1229,6 @@ def _prompt_use_garmin_activity_links(default_enabled: bool) -> bool:
     return choice == "yes"
 
 
-def _prompt_profile_url_if_missing(source: str) -> str:
-    normalized_source = str(source or "").strip().lower()
-    if normalized_source == "garmin":
-        example = "https://connect.garmin.com/modern/profile/<id>"
-        normalize = _normalize_garmin_profile_url
-        provider_name = "Garmin"
-    else:
-        example = "https://www.strava.com/athletes/<id>"
-        normalize = _normalize_strava_profile_url
-        provider_name = "Strava"
-
-    print(
-        f"{provider_name} profile URL could not be auto-detected.\n"
-        f"Optional: paste your {provider_name} profile URL (example: {example})."
-    )
-    while True:
-        response = input("Profile URL (leave blank to skip): ").strip()
-        if not response:
-            return ""
-        try:
-            return normalize(response)
-        except ValueError as exc:
-            print(str(exc))
-
-
 def _resolve_strava_profile_url(
     args: argparse.Namespace,
     interactive: bool,
@@ -1290,8 +1265,6 @@ def _resolve_strava_profile_url(
             return ""
         if candidate:
             return candidate
-        if interactive and prompt_if_missing:
-            return _prompt_profile_url_if_missing("strava")
         return ""
 
     if interactive:
@@ -1300,8 +1273,6 @@ def _resolve_strava_profile_url(
             return ""
         if candidate:
             return candidate
-        if prompt_if_missing:
-            return _prompt_profile_url_if_missing("strava")
         return ""
 
     return candidate
@@ -1351,8 +1322,6 @@ def _resolve_garmin_profile_url(
             return ""
         if candidate:
             return candidate
-        if interactive and prompt_if_missing:
-            return _prompt_profile_url_if_missing("garmin")
         return ""
 
     if interactive:
@@ -1361,8 +1330,6 @@ def _resolve_garmin_profile_url(
             return ""
         if candidate:
             return candidate
-        if prompt_if_missing:
-            return _prompt_profile_url_if_missing("garmin")
         return ""
 
     return candidate
@@ -1394,7 +1361,7 @@ def _resolve_strava_profile_link_preference(
         return False, ""
     if existing_value:
         return True, existing_value
-    return True, _prompt_profile_url_if_missing("strava")
+    return True, ""
 
 
 def _resolve_garmin_profile_link_preference(
@@ -1423,7 +1390,7 @@ def _resolve_garmin_profile_link_preference(
         return False, ""
     if existing_value:
         return True, existing_value
-    return True, _prompt_profile_url_if_missing("garmin")
+    return True, ""
 
 
 def _resolve_strava_activity_links(

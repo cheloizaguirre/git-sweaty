@@ -499,16 +499,12 @@ class SetupAuthDispatchTests(unittest.TestCase):
         self.assertEqual(value, "https://www.strava.com/athletes/789")
         prompt_mock.assert_called_once_with(default_enabled=True)
 
-    def test_resolve_strava_profile_url_interactive_prompts_for_manual_url_when_detection_missing(self) -> None:
+    def test_resolve_strava_profile_url_interactive_returns_empty_when_detection_missing(self) -> None:
         args = Namespace(strava_profile_url=None)
         with (
             mock.patch("setup_auth._get_variable", return_value=""),
             mock.patch("setup_auth._detect_strava_profile_url", return_value=""),
             mock.patch("setup_auth._prompt_use_strava_profile_link", return_value=True) as opt_in_mock,
-            mock.patch(
-                "setup_auth._prompt_profile_url_if_missing",
-                return_value="https://www.strava.com/athletes/999",
-            ) as manual_prompt_mock,
         ):
             value = setup_auth._resolve_strava_profile_url(
                 args,
@@ -516,9 +512,8 @@ class SetupAuthDispatchTests(unittest.TestCase):
                 repo="owner/repo",
                 tokens={},
             )
-        self.assertEqual(value, "https://www.strava.com/athletes/999")
+        self.assertEqual(value, "")
         opt_in_mock.assert_called_once_with(default_enabled=False)
-        manual_prompt_mock.assert_called_once_with("strava")
 
     def test_resolve_garmin_profile_url_non_interactive_uses_existing_variable(self) -> None:
         args = Namespace(garmin_profile_url=None)
@@ -557,16 +552,12 @@ class SetupAuthDispatchTests(unittest.TestCase):
         self.assertEqual(value, "https://connect.garmin.com/modern/profile/789")
         prompt_mock.assert_called_once_with(default_enabled=True)
 
-    def test_resolve_garmin_profile_url_interactive_prompts_for_manual_url_when_detection_missing(self) -> None:
+    def test_resolve_garmin_profile_url_interactive_returns_empty_when_detection_missing(self) -> None:
         args = Namespace(garmin_profile_url=None)
         with (
             mock.patch("setup_auth._get_variable", return_value=""),
             mock.patch("setup_auth._detect_garmin_profile_url", return_value=""),
             mock.patch("setup_auth._prompt_use_garmin_profile_link", return_value=True) as opt_in_mock,
-            mock.patch(
-                "setup_auth._prompt_profile_url_if_missing",
-                return_value="https://connect.garmin.com/modern/profile/999",
-            ) as manual_prompt_mock,
         ):
             value = setup_auth._resolve_garmin_profile_url(
                 args,
@@ -576,9 +567,8 @@ class SetupAuthDispatchTests(unittest.TestCase):
                 email="user@example.com",
                 password="secret",
             )
-        self.assertEqual(value, "https://connect.garmin.com/modern/profile/999")
+        self.assertEqual(value, "")
         opt_in_mock.assert_called_once_with(default_enabled=False)
-        manual_prompt_mock.assert_called_once_with("garmin")
 
     def test_resolve_strava_profile_link_preference_interactive_can_disable(self) -> None:
         args = Namespace(strava_profile_url=None)
@@ -595,15 +585,26 @@ class SetupAuthDispatchTests(unittest.TestCase):
         self.assertEqual(prefilled, "")
         prompt_mock.assert_called_once_with(default_enabled=True)
 
-    def test_resolve_garmin_profile_link_preference_interactive_prompts_manual_when_missing(self) -> None:
+    def test_resolve_strava_profile_link_preference_interactive_enables_without_manual_url(self) -> None:
+        args = Namespace(strava_profile_url=None)
+        with (
+            mock.patch("setup_auth._get_variable", return_value=""),
+            mock.patch("setup_auth._prompt_use_strava_profile_link", return_value=True) as opt_in_mock,
+        ):
+            enabled, prefilled = setup_auth._resolve_strava_profile_link_preference(
+                args,
+                interactive=True,
+                repo="owner/repo",
+            )
+        self.assertTrue(enabled)
+        self.assertEqual(prefilled, "")
+        opt_in_mock.assert_called_once_with(default_enabled=False)
+
+    def test_resolve_garmin_profile_link_preference_interactive_enables_without_manual_url(self) -> None:
         args = Namespace(garmin_profile_url=None)
         with (
             mock.patch("setup_auth._get_variable", return_value=""),
             mock.patch("setup_auth._prompt_use_garmin_profile_link", return_value=True) as opt_in_mock,
-            mock.patch(
-                "setup_auth._prompt_profile_url_if_missing",
-                return_value="https://connect.garmin.com/modern/profile/abc",
-            ) as manual_prompt_mock,
         ):
             enabled, prefilled = setup_auth._resolve_garmin_profile_link_preference(
                 args,
@@ -611,9 +612,8 @@ class SetupAuthDispatchTests(unittest.TestCase):
                 repo="owner/repo",
             )
         self.assertTrue(enabled)
-        self.assertEqual(prefilled, "https://connect.garmin.com/modern/profile/abc")
+        self.assertEqual(prefilled, "")
         opt_in_mock.assert_called_once_with(default_enabled=False)
-        manual_prompt_mock.assert_called_once_with("garmin")
 
     def test_clear_variable_ignores_not_found(self) -> None:
         with mock.patch(
