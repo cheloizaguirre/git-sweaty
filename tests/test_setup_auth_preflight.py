@@ -512,6 +512,32 @@ class SetupAuthDispatchTests(unittest.TestCase):
         self.assertTrue(ok)
         self.assertIn("custom domain cleared", detail.lower())
 
+    def test_try_enable_repo_issues_noop_when_already_enabled(self) -> None:
+        with mock.patch(
+            "setup_auth._run",
+            return_value=_completed_process(returncode=0, stdout="true\n"),
+        ) as run_mock:
+            ok, detail = setup_auth._try_enable_repo_issues("owner/repo")
+
+        self.assertTrue(ok)
+        self.assertIn("already enabled", detail.lower())
+        run_mock.assert_called_once_with(
+            ["gh", "api", "repos/owner/repo", "--jq", ".has_issues"],
+            check=False,
+        )
+
+    def test_try_enable_repo_issues_sets_and_verifies(self) -> None:
+        responses = [
+            _completed_process(returncode=0, stdout="false\n"),
+            _completed_process(returncode=0),
+            _completed_process(returncode=0, stdout="true\n"),
+        ]
+        with mock.patch("setup_auth._run", side_effect=responses):
+            ok, detail = setup_auth._try_enable_repo_issues("owner/repo")
+
+        self.assertTrue(ok)
+        self.assertIn("issues are enabled", detail.lower())
+
     def test_prompt_custom_pages_domain_can_request_clear_existing_domain(self) -> None:
         with (
             mock.patch("setup_auth._get_pages_custom_domain", return_value="strava.example.com"),
@@ -950,6 +976,7 @@ class SetupAuthMainFlowTests(unittest.TestCase):
             stack.enter_context(mock.patch("setup_auth._set_secret"))
             stack.enter_context(mock.patch("setup_auth._set_variable"))
             stack.enter_context(mock.patch("setup_auth._try_enable_actions_permissions", return_value=(True, "ok")))
+            stack.enter_context(mock.patch("setup_auth._try_enable_repo_issues", return_value=(True, "ok")))
             stack.enter_context(mock.patch("setup_auth._try_enable_workflows", return_value=(True, "ok")))
             stack.enter_context(mock.patch("setup_auth._try_configure_pages", return_value=(True, "ok")))
             dispatch_mock = stack.enter_context(
@@ -1066,6 +1093,7 @@ class SetupAuthMainFlowTests(unittest.TestCase):
             set_variable_mock = stack.enter_context(mock.patch("setup_auth._set_variable"))
             stack.enter_context(mock.patch("setup_auth._clear_variable"))
             stack.enter_context(mock.patch("setup_auth._try_enable_actions_permissions", return_value=(True, "ok")))
+            stack.enter_context(mock.patch("setup_auth._try_enable_repo_issues", return_value=(True, "ok")))
             stack.enter_context(mock.patch("setup_auth._try_enable_workflows", return_value=(True, "ok")))
             stack.enter_context(mock.patch("setup_auth._try_configure_pages", return_value=(True, "ok")))
             stack.enter_context(mock.patch("setup_auth._try_dispatch_sync", return_value=(True, "ok")))
@@ -1158,6 +1186,7 @@ class SetupAuthMainFlowTests(unittest.TestCase):
             )
             set_variable_mock = stack.enter_context(mock.patch("setup_auth._set_variable"))
             stack.enter_context(mock.patch("setup_auth._try_enable_actions_permissions", return_value=(True, "ok")))
+            stack.enter_context(mock.patch("setup_auth._try_enable_repo_issues", return_value=(True, "ok")))
             stack.enter_context(mock.patch("setup_auth._try_enable_workflows", return_value=(True, "ok")))
             stack.enter_context(mock.patch("setup_auth._try_configure_pages", return_value=(True, "ok")))
             stack.enter_context(mock.patch("setup_auth._try_dispatch_sync", return_value=(True, "ok")))
@@ -1261,6 +1290,7 @@ class SetupAuthMainFlowTests(unittest.TestCase):
             stack.enter_context(mock.patch("setup_auth._set_secret"))
             set_variable_mock = stack.enter_context(mock.patch("setup_auth._set_variable"))
             stack.enter_context(mock.patch("setup_auth._try_enable_actions_permissions", return_value=(True, "ok")))
+            stack.enter_context(mock.patch("setup_auth._try_enable_repo_issues", return_value=(True, "ok")))
             stack.enter_context(mock.patch("setup_auth._try_enable_workflows", return_value=(True, "ok")))
             stack.enter_context(mock.patch("setup_auth._try_configure_pages", return_value=(True, "ok")))
             stack.enter_context(mock.patch("setup_auth._try_dispatch_sync", return_value=(True, "ok")))
@@ -1369,6 +1399,7 @@ class SetupAuthMainFlowTests(unittest.TestCase):
             stack.enter_context(mock.patch("setup_auth._set_variable"))
             stack.enter_context(mock.patch("setup_auth._clear_variable"))
             stack.enter_context(mock.patch("setup_auth._try_enable_actions_permissions", return_value=(True, "ok")))
+            stack.enter_context(mock.patch("setup_auth._try_enable_repo_issues", return_value=(True, "ok")))
             stack.enter_context(mock.patch("setup_auth._try_enable_workflows", return_value=(True, "ok")))
             stack.enter_context(mock.patch("setup_auth._try_configure_pages", return_value=(True, "ok")))
             stack.enter_context(mock.patch("setup_auth._try_dispatch_sync", return_value=(True, "ok")))
@@ -1437,6 +1468,7 @@ class SetupAuthMainFlowTests(unittest.TestCase):
             stack.enter_context(mock.patch("setup_auth._set_variable"))
             stack.enter_context(mock.patch("setup_auth._clear_variable"))
             stack.enter_context(mock.patch("setup_auth._try_enable_actions_permissions", return_value=(True, "ok")))
+            stack.enter_context(mock.patch("setup_auth._try_enable_repo_issues", return_value=(True, "ok")))
             stack.enter_context(mock.patch("setup_auth._try_enable_workflows", return_value=(True, "ok")))
             stack.enter_context(mock.patch("setup_auth._try_configure_pages", return_value=(True, "ok")))
             stack.enter_context(mock.patch("setup_auth._try_dispatch_sync", return_value=(True, "ok")))
@@ -1493,6 +1525,7 @@ class SetupAuthMainFlowTests(unittest.TestCase):
             stack.enter_context(mock.patch("setup_auth._set_variable"))
             stack.enter_context(mock.patch("setup_auth._clear_variable"))
             stack.enter_context(mock.patch("setup_auth._try_enable_actions_permissions", return_value=(True, "ok")))
+            stack.enter_context(mock.patch("setup_auth._try_enable_repo_issues", return_value=(True, "ok")))
             stack.enter_context(mock.patch("setup_auth._try_enable_workflows", return_value=(True, "ok")))
             stack.enter_context(mock.patch("setup_auth._try_configure_pages", return_value=(True, "ok")))
             set_domain_mock = stack.enter_context(
@@ -1552,6 +1585,7 @@ class SetupAuthMainFlowTests(unittest.TestCase):
             stack.enter_context(mock.patch("setup_auth._set_variable"))
             stack.enter_context(mock.patch("setup_auth._clear_variable"))
             stack.enter_context(mock.patch("setup_auth._try_enable_actions_permissions", return_value=(True, "ok")))
+            stack.enter_context(mock.patch("setup_auth._try_enable_repo_issues", return_value=(True, "ok")))
             stack.enter_context(mock.patch("setup_auth._try_enable_workflows", return_value=(True, "ok")))
             stack.enter_context(mock.patch("setup_auth._try_configure_pages", return_value=(True, "ok")))
             stack.enter_context(mock.patch("setup_auth._try_set_pages_custom_domain", return_value=(True, "ok")))

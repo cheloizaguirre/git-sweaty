@@ -1941,6 +1941,45 @@ def _try_enable_actions_permissions(repo: str) -> Tuple[bool, str]:
     return False, "Unable to configure repository Actions permissions automatically."
 
 
+def _repo_has_issues_enabled(repo: str) -> Optional[bool]:
+    result = _run(["gh", "api", f"repos/{repo}", "--jq", ".has_issues"], check=False)
+    if result.returncode != 0:
+        return None
+    value = str(result.stdout or "").strip().lower()
+    if value == "true":
+        return True
+    if value == "false":
+        return False
+    return None
+
+
+def _try_enable_repo_issues(repo: str) -> Tuple[bool, str]:
+    current = _repo_has_issues_enabled(repo)
+    if current is True:
+        return True, "Repository Issues are already enabled."
+
+    errors: list[str] = []
+    attempts = [
+        ["gh", "api", "-X", "PATCH", f"repos/{repo}", "-F", "has_issues=true"],
+        ["gh", "api", "-X", "PATCH", f"repos/{repo}", "-f", "has_issues=true"],
+    ]
+    for cmd in attempts:
+        result = _run(cmd, check=False)
+        if result.returncode == 0 and _repo_has_issues_enabled(repo) is True:
+            return True, "Repository Issues are enabled."
+        if result.returncode != 0:
+            errors.append(_first_stderr_line(result.stderr))
+
+    final_state = _repo_has_issues_enabled(repo)
+    if final_state is True:
+        return True, "Repository Issues are enabled."
+
+    if errors:
+        ordered_unique = list(dict.fromkeys(errors))
+        return False, "; ".join(ordered_unique)
+    return False, "Unable to enable repository Issues automatically."
+
+
 def _repo_default_branch(repo: str) -> str:
     result = _run(["gh", "api", f"repos/{repo}", "--jq", ".default_branch"], check=False)
     if result.returncode != 0:
@@ -2931,6 +2970,19 @@ def main() -> int:
             status=STATUS_OK if enabled else STATUS_MANUAL_REQUIRED,
             detail=detail if enabled else f"Could not configure automatically: {detail}",
             manual_help=None if enabled else f"Open {actions_settings_url} and allow Actions/workflows.",
+        )
+
+        issues_enabled, issues_detail = _try_enable_repo_issues(repo)
+        _add_step(
+            steps,
+            name="Issues tab",
+            status=STATUS_OK if issues_enabled else STATUS_MANUAL_REQUIRED,
+            detail=issues_detail if issues_enabled else f"Could not configure automatically: {issues_detail}",
+            manual_help=(
+                None
+                if issues_enabled
+                else f"Open {repo_url}/settings and enable Issues under Features."
+            ),
         )
 
         workflows_enabled, workflow_detail = _try_enable_workflows(
