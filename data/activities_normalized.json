@@ -1844,5 +1844,18 @@
     "start_date_local": "2026-02-21T14:27:58Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-02-22",
+    "distance": 38373.1,
+    "elevation_gain": 245.0,
+    "id": "17483893348",
+    "moving_time": 5712.0,
+    "name": "Zwift - JOIN: Sweet spot tempo on Libby Hill After Party in Richmond",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-02-22T14:02:15Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
