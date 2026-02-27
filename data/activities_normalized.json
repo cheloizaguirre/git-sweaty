@@ -1870,5 +1870,18 @@
     "start_date_local": "2026-02-24T20:40:44Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-02-26",
+    "distance": 35110.4,
+    "elevation_gain": 110.0,
+    "id": "17534458303",
+    "moving_time": 4888.0,
+    "name": "Zwift - JOIN: 2 sets 30-30s on Big Flat 8 in Watopia",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-02-26T21:03:22Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
