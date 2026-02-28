@@ -1883,5 +1883,31 @@
     "start_date_local": "2026-02-26T21:03:22Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-02-28",
+    "distance": 7344.1,
+    "elevation_gain": 118.0,
+    "id": "17552342813",
+    "moving_time": 1592.0,
+    "name": "Zwift - Pacer Group Ride with Taylor",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-02-28T14:39:24Z",
+    "type": "VirtualRide",
+    "year": 2026
+  },
+  {
+    "date": "2026-02-28",
+    "distance": 22764.4,
+    "elevation_gain": 231.0,
+    "id": "17553066251",
+    "moving_time": 3013.0,
+    "name": "Zwift - Race: Stage 2: Zwift Games: Hudson Hustle (E)",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-02-28T15:14:13Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
