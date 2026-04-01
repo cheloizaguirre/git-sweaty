@@ -1935,5 +1935,18 @@
     "start_date_local": "2026-03-28T15:26:23Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-03-31",
+    "distance": 30062.8,
+    "elevation_gain": 309.0,
+    "id": "17929072003",
+    "moving_time": 5113.0,
+    "name": "Zwift - JOIN: Reversed steigerungs",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-03-31T20:32:03Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
