@@ -1987,5 +1987,18 @@
     "start_date_local": "2026-04-09T16:49:00Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-04-11",
+    "distance": 33056.0,
+    "elevation_gain": 450.0,
+    "id": "18067719101",
+    "moving_time": 6490.0,
+    "name": "Zwift - JOIN: 3x 10 min threshold",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-04-11T16:03:37Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
