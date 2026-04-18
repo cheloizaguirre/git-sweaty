@@ -2026,5 +2026,18 @@
     "start_date_local": "2026-04-16T20:39:39Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-04-18",
+    "distance": 25038.3,
+    "elevation_gain": 616.0,
+    "id": "18159673174",
+    "moving_time": 6672.0,
+    "name": "Zwift - JOIN: Sweet spot tempo",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-04-18T15:56:11Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
