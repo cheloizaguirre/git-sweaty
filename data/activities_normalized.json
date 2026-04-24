@@ -2052,5 +2052,18 @@
     "start_date_local": "2026-04-21T16:47:01Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-04-23",
+    "distance": 26062.1,
+    "elevation_gain": 356.0,
+    "id": "18230243314",
+    "moving_time": 5408.0,
+    "name": "Zwift - JOIN: Short Vo2max + tempo intervals",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-04-23T20:43:20Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
