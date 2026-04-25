@@ -2503,7 +2503,7 @@
       }
     }
   },
-  "generated_at": "2026-04-25T15:36:19.322689+00:00",
+  "generated_at": "2026-04-25T17:41:40.702040+00:00",
   "other_bucket": "OtherSports",
   "repo": "cheloizaguirre/git-sweaty",
   "source": "strava",
@@ -2522,10 +2522,10 @@
     "VirtualRide"
   ],
   "units": {
-    "distance": "km",
-    "elevation": "m"
+    "distance": "mi",
+    "elevation": "ft"
   },
-  "week_start": "monday",
+  "week_start": "sunday",
   "years": [
     2014,
     2015,
