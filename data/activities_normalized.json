@@ -2078,5 +2078,18 @@
     "start_date_local": "2026-04-25T15:02:59Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-04-28",
+    "distance": 30099.8,
+    "elevation_gain": 335.0,
+    "id": "18296109363",
+    "moving_time": 5110.0,
+    "name": "Zwift - JOIN: 2 sets 4x 1 min strength",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-04-28T20:00:25Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
