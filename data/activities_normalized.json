@@ -2117,5 +2117,18 @@
     "start_date_local": "2026-05-05T20:29:47Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-05-10",
+    "distance": 16029.3,
+    "elevation_gain": 348.0,
+    "id": "18448146581",
+    "moving_time": 3374.0,
+    "name": "Zwift - Hilltop Hustle in Watopia",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-05-10T10:35:13Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
