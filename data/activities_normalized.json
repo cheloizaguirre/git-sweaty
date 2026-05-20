@@ -2169,5 +2169,18 @@
     "start_date_local": "2026-05-16T16:06:48Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-05-19",
+    "distance": 18440.0,
+    "elevation_gain": 514.0,
+    "id": "18572643535",
+    "moving_time": 5424.0,
+    "name": "Zwift - JOIN: Alternating Vo2max intervals",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-05-19T20:36:14Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
