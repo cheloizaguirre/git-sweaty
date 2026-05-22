@@ -2182,5 +2182,18 @@
     "start_date_local": "2026-05-19T20:36:14Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-05-21",
+    "distance": 28044.3,
+    "elevation_gain": 363.0,
+    "id": "18596071914",
+    "moving_time": 5430.0,
+    "name": "Zwift - JOIN: Cadence pyramid",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-05-21T16:15:51Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
