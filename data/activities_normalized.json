@@ -2195,5 +2195,31 @@
     "start_date_local": "2026-05-21T16:15:51Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-05-24",
+    "distance": 10371.0,
+    "elevation_gain": 97.0,
+    "id": "18635274887",
+    "moving_time": 1811.0,
+    "name": "Zwift - Aurora",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-05-24T15:52:54Z",
+    "type": "VirtualRide",
+    "year": 2026
+  },
+  {
+    "date": "2026-05-24",
+    "distance": 11440.1,
+    "elevation_gain": 159.0,
+    "id": "18635701858",
+    "moving_time": 1808.0,
+    "name": "Zwift - Balance Point",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-05-24T16:25:06Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
