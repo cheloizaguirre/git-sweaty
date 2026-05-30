@@ -2234,5 +2234,18 @@
     "start_date_local": "2026-05-26T19:57:48Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-05-29",
+    "distance": 15420.8,
+    "elevation_gain": 383.0,
+    "id": "18703148928",
+    "moving_time": 3622.0,
+    "name": "Zwift - JOIN: 20 min FTP test",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-05-29T16:43:07Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
