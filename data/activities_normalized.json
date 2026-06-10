@@ -2273,5 +2273,18 @@
     "start_date_local": "2026-06-06T16:26:33Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-06-09",
+    "distance": 14477.3,
+    "elevation_gain": 701.0,
+    "id": "18855481353",
+    "moving_time": 5835.0,
+    "name": "Zwift - JOIN: 4x 10 min tempo",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-06-09T20:49:01Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
