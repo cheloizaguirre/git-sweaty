@@ -2286,5 +2286,18 @@
     "start_date_local": "2026-06-09T20:49:01Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-06-11",
+    "distance": 22481.7,
+    "elevation_gain": 269.0,
+    "id": "18878763232",
+    "moving_time": 3807.0,
+    "name": "Zwift - Sneaky",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-06-11T16:30:09Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
