@@ -2312,5 +2312,18 @@
     "start_date_local": "2026-06-13T15:30:56Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-06-15",
+    "distance": 21075.1,
+    "elevation_gain": 233.0,
+    "id": "18925247359",
+    "moving_time": 3480.0,
+    "name": "Zwift - JOIN: Strength RPM mix",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-06-15T08:06:17Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
