@@ -2338,5 +2338,18 @@
     "start_date_local": "2026-06-17T07:59:54Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-06-19",
+    "distance": 24675.7,
+    "elevation_gain": 140.0,
+    "id": "18985277309",
+    "moving_time": 3682.0,
+    "name": "Zwift - JOIN: Tempo steigerung",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-06-19T16:58:59Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
