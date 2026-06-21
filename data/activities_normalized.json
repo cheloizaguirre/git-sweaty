@@ -2351,5 +2351,18 @@
     "start_date_local": "2026-06-19T16:58:59Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-06-20",
+    "distance": 41218.4,
+    "elevation_gain": 514.0,
+    "id": "18998050826",
+    "moving_time": 7242.0,
+    "name": "Zwift - JOIN: Increasing sprints",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-06-20T15:34:34Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
