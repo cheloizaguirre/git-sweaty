@@ -2364,5 +2364,18 @@
     "start_date_local": "2026-06-20T15:34:34Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-06-22",
+    "distance": 12906.5,
+    "elevation_gain": 291.0,
+    "id": "19018192344",
+    "moving_time": 3044.0,
+    "name": "Zwift - JOIN: Under-overs",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-06-22T08:20:28Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
