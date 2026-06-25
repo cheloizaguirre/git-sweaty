@@ -2377,5 +2377,18 @@
     "start_date_local": "2026-06-22T08:20:28Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-06-24",
+    "distance": 18026.5,
+    "elevation_gain": 323.0,
+    "id": "19045504225",
+    "moving_time": 3492.0,
+    "name": "Zwift - JOIN: 2 series sweet spot with accelerations",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-06-24T08:57:08Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
