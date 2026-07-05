@@ -2429,5 +2429,18 @@
     "start_date_local": "2026-06-30T07:31:18Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-07-04",
+    "distance": 10372.5,
+    "elevation_gain": 579.0,
+    "id": "19177363831",
+    "moving_time": 4811.0,
+    "name": "Zwift - JOIN: Grand D\u00e9part \u2013 Team Trial \u2013 Short",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-07-04T16:09:23Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
