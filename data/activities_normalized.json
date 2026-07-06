@@ -2442,5 +2442,18 @@
     "start_date_local": "2026-07-04T16:09:23Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-07-05",
+    "distance": 24849.2,
+    "elevation_gain": 311.0,
+    "id": "19189419264",
+    "moving_time": 4261.0,
+    "name": "Zwift - JOIN: Montju\u00efc Circuits \u2013 Short",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-07-05T15:06:13Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
