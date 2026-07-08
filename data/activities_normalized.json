@@ -2455,5 +2455,18 @@
     "start_date_local": "2026-07-05T15:06:13Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-07-07",
+    "distance": 30145.0,
+    "elevation_gain": 220.0,
+    "id": "19218339771",
+    "moving_time": 4554.0,
+    "name": "Zwift - JOIN: Pyrenean Foothills \u2013 Short",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-07-07T20:06:10Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
