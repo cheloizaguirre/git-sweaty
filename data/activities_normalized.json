@@ -2468,5 +2468,18 @@
     "start_date_local": "2026-07-07T20:06:10Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-07-09",
+    "distance": 17598.4,
+    "elevation_gain": 558.0,
+    "id": "19243440961",
+    "moving_time": 5085.0,
+    "name": "Zwift - JOIN: The Tourmalet \u2013 Short",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-07-09T15:54:24Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
