@@ -2481,5 +2481,18 @@
     "start_date_local": "2026-07-09T15:54:24Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-07-11",
+    "distance": 28811.7,
+    "elevation_gain": 213.0,
+    "id": "19269172428",
+    "moving_time": 4531.0,
+    "name": "Zwift - JOIN: Bordeaux Sprint \u2013 Short",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-07-11T15:14:56Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
