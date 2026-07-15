@@ -2494,5 +2494,18 @@
     "start_date_local": "2026-07-11T15:14:56Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-07-14",
+    "distance": 28309.1,
+    "elevation_gain": 271.0,
+    "id": "19310720847",
+    "moving_time": 4808.0,
+    "name": "Zwift - JOIN: Bastille Day Attacks \u2013 Short",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-07-14T17:03:44Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
