@@ -2507,5 +2507,18 @@
     "start_date_local": "2026-07-14T17:03:44Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-07-16",
+    "distance": 16899.1,
+    "elevation_gain": 317.0,
+    "id": "19340244805",
+    "moving_time": 3624.0,
+    "name": "Zwift - JOIN: Burgundy Rollers \u2013 Short",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-07-16T20:20:51Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
