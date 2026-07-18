@@ -3921,6 +3921,113 @@ function trendsMonthColumnCountForYear(year, referenceDate = new Date()) {
   return 12;
 }
 
+const RECORD_PERIOD_ITEMS = [
+  { key: "day", label: "Best Day" },
+  { key: "week", label: "Best Week" },
+  { key: "month", label: "Best Month" },
+];
+const RECORDS_METRIC_ORDER = ["distance", "moving_time", "elevation_gain", "count"];
+
+function computeDailyTotalsByDate(aggregates, types, years) {
+  const typeList = Array.isArray(types) ? types : [];
+  const yearList = Array.isArray(years) ? years : [];
+  const totals = new Map();
+  yearList.forEach((year) => {
+    const yearData = aggregates?.[String(year)] || {};
+    typeList.forEach((type) => {
+      Object.entries(yearData?.[type] || {}).forEach(([dateStr, entry]) => {
+        let dayTotal = totals.get(dateStr);
+        if (!dayTotal) {
+          dayTotal = {
+            count: 0,
+            distance: 0,
+            moving_time: 0,
+            elevation_gain: 0,
+            perType: {},
+          };
+          totals.set(dateStr, dayTotal);
+        }
+        const count = Number(entry?.count || 0);
+        dayTotal.count += count;
+        dayTotal.distance += Number(entry?.distance || 0);
+        dayTotal.moving_time += Number(entry?.moving_time || 0);
+        dayTotal.elevation_gain += Number(entry?.elevation_gain || 0);
+        if (count > 0) {
+          let perType = dayTotal.perType[type];
+          if (!perType) {
+            perType = { count: 0 };
+            dayTotal.perType[type] = perType;
+          }
+          perType.count += count;
+        }
+      });
+    });
+  });
+  return totals;
+}
+
+function computeRecords(aggregates, types, years, weekStart) {
+  const normalizedWeekStart = normalizeWeekStart(weekStart);
+  const records = { day: {}, week: {}, month: {} };
+
+  // Ties keep the earliest period: iteration is chronological and only a
+  // strictly greater value replaces the current best.
+  const considerBest = (periodRecords, metricKey, value, ref) => {
+    if (!Number.isFinite(value) || value <= 0) return;
+    const current = periodRecords[metricKey];
+    if (current && value <= current.value) return;
+    periodRecords[metricKey] = { value, ...ref };
+  };
+
+  const dailyTotals = computeDailyTotalsByDate(aggregates, types, years);
+  Array.from(dailyTotals.keys()).sort().forEach((dateStr) => {
+    const dayTotal = dailyTotals.get(dateStr);
+    RECORDS_METRIC_ORDER.forEach((metricKey) => {
+      considerBest(records.day, metricKey, Number(dayTotal[metricKey] || 0), {
+        dateKey: dateStr,
+        bucket: dayTotal,
+      });
+    });
+  });
+
+  ["week", "month"].forEach((periodKey) => {
+    const granularity = periodKey === "week" ? "weekly" : "monthly";
+    const buckets = bucketAggregatesByPeriod(
+      aggregates, types, years, granularity, normalizedWeekStart,
+    );
+    buckets.forEach((bucket) => {
+      RECORDS_METRIC_ORDER.forEach((metricKey) => {
+        considerBest(records[periodKey], metricKey, trendsMetricValue(bucket, metricKey), {
+          year: bucket.year,
+          index: bucket.index,
+          bucket,
+        });
+      });
+    });
+  });
+
+  return records;
+}
+
+function formatRecordDate(dateKey) {
+  const normalized = String(dateKey || "");
+  const year = Number(normalized.slice(0, 4));
+  const monthIndex = Number(normalized.slice(5, 7)) - 1;
+  const day = Number(normalized.slice(8, 10));
+  if (!year || monthIndex < 0 || monthIndex > 11 || !day) return normalized;
+  return `${MONTHS[monthIndex]} ${day}, ${year}`;
+}
+
+function formatRecordWhen(periodKey, record, weekStart) {
+  if (periodKey === "day") {
+    return formatRecordDate(record.dateKey);
+  }
+  if (periodKey === "week") {
+    return `${trendsWeekRangeLabel(record.year, record.index, weekStart)}, ${record.year}`;
+  }
+  return `${MONTHS[record.index] || ""} ${record.year}`;
+}
+
 function progressDayOfYear(dateStr) {
   const normalized = String(dateStr || "");
   const year = Number(normalized.slice(0, 4));
@@ -5259,6 +5366,93 @@ function buildProgressCard(payload, types, years, options = {}) {
   return card;
 }
 
+function buildRecordsCard(payload, types, years, options = {}) {
+  const units = normalizeUnits(options.units || payload.units || DEFAULT_UNITS);
+  const weekStart = normalizeWeekStart(options.weekStart);
+  const typeList = Array.isArray(types) ? types : [];
+  const yearsList = Array.isArray(years) ? years : [];
+  const aggregates = payload.aggregates || {};
+
+  const records = computeRecords(aggregates, typeList, yearsList, weekStart);
+  const hasAnyRecord = RECORD_PERIOD_ITEMS.some((period) => (
+    RECORDS_METRIC_ORDER.some((metricKey) => records[period.key][metricKey])
+  ));
+  if (!hasAnyRecord) {
+    return buildEmptySelectionCard();
+  }
+
+  const metricLabelByKey = {};
+  TRENDS_METRIC_ITEMS.forEach((item) => {
+    metricLabelByKey[item.key] = item.label;
+  });
+
+  const buildRecordTooltip = (periodLabel, whenLabel, record) => {
+    const bucket = record.bucket || {};
+    const lines = [`${periodLabel}: ${whenLabel}`];
+    const breakdown = createTooltipBreakdown();
+    Object.entries(bucket.perType || {}).forEach(([type, perType]) => {
+      breakdown.typeCounts[type] = Number(perType?.count || 0);
+    });
+    lines.push(formatTooltipBreakdown(Number(bucket.count || 0), breakdown, typeList));
+    TRENDS_METRIC_ITEMS.forEach((item) => {
+      if (item.key === "count") return;
+      const value = Number(bucket[item.key] || 0);
+      if (value <= 0) return;
+      lines.push(`${item.label}: ${formatTrendsMetricValue(item.key, value, units)}`);
+    });
+    return lines.join("\n");
+  };
+
+  const card = document.createElement("div");
+  card.className = "card records-card";
+
+  const groups = document.createElement("div");
+  groups.className = "records-groups";
+
+  RECORD_PERIOD_ITEMS.forEach((period) => {
+    const periodRecords = records[period.key];
+    const rows = RECORDS_METRIC_ORDER
+      .map((metricKey) => ({ metricKey, record: periodRecords[metricKey] }))
+      .filter((row) => row.record);
+    if (!rows.length) return;
+
+    const group = document.createElement("div");
+    group.className = "record-group";
+    const title = document.createElement("div");
+    title.className = "record-group-title";
+    title.textContent = period.label;
+    group.appendChild(title);
+
+    rows.forEach(({ metricKey, record }) => {
+      const row = document.createElement("div");
+      row.className = "record-row";
+      const metricLabel = document.createElement("div");
+      metricLabel.className = "record-metric";
+      metricLabel.textContent = metricLabelByKey[metricKey] || metricKey;
+      const detail = document.createElement("div");
+      detail.className = "record-detail";
+      const value = document.createElement("span");
+      value.className = "record-value";
+      value.textContent = formatTrendsMetricValue(metricKey, record.value, units);
+      const when = document.createElement("span");
+      when.className = "record-when";
+      const whenLabel = formatRecordWhen(period.key, record, weekStart);
+      when.textContent = ` · ${whenLabel}`;
+      detail.appendChild(value);
+      detail.appendChild(when);
+      row.appendChild(metricLabel);
+      row.appendChild(detail);
+      attachTooltip(row, buildRecordTooltip(period.label, whenLabel, record));
+      group.appendChild(row);
+    });
+
+    groups.appendChild(group);
+  });
+
+  card.appendChild(groups);
+  return card;
+}
+
 function renderLoadError(error) {
   const detail = error && typeof error.message === "string" && error.message
     ? error.message
@@ -5879,6 +6073,18 @@ async function init() {
             ),
           );
           list.appendChild(pairRow);
+          const recordsCard = buildRecordsCard(payload, types, cardYears, {
+            units: currentUnits,
+            weekStart: setupWeekStart,
+          });
+          setCardScrollKey(recordsCard, `${combinedSelectionKey}:records`);
+          list.appendChild(
+            buildLabeledCardRow(
+              "Records",
+              recordsCard,
+              "records",
+            ),
+          );
         }
         cardYears.forEach((year) => {
           const yearData = payload.aggregates?.[String(year)] || {};
@@ -5984,6 +6190,18 @@ async function init() {
               ),
             );
             list.appendChild(pairRow);
+            const recordsCard = buildRecordsCard(payload, [type], cardYears, {
+              units: currentUnits,
+              weekStart: setupWeekStart,
+            });
+            setCardScrollKey(recordsCard, `${typeCardKey}:records`);
+            list.appendChild(
+              buildLabeledCardRow(
+                "Records",
+                recordsCard,
+                "records",
+              ),
+            );
           }
           cardYears.forEach((year) => {
             const aggregates = payload.aggregates?.[String(year)]?.[type] || {};

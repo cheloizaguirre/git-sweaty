@@ -1172,6 +1172,70 @@
         flex: 0 0 auto;
       }
 
+      .labeled-card-row-records > .card {
+        width: max-content;
+        max-width: 100%;
+      }
+
+      .records-card {
+        display: grid;
+        grid-template-rows: auto auto;
+        row-gap: var(--labeled-card-title-gap);
+      }
+
+      .records-groups {
+        display: flex;
+        flex-wrap: wrap;
+        column-gap: var(--space-8);
+        row-gap: var(--space-6);
+        align-items: flex-start;
+      }
+
+      .record-group {
+        display: grid;
+        row-gap: var(--space-3);
+        align-content: start;
+      }
+
+      .record-group-title {
+        font-size: 11px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--muted, #94a3b8);
+        margin-bottom: var(--space-1);
+      }
+
+      .record-row {
+        display: grid;
+        grid-template-columns: 84px max-content;
+        column-gap: var(--space-4);
+        align-items: baseline;
+        border-radius: 6px;
+      }
+
+      .record-metric {
+        font-size: 10px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--muted, #94a3b8);
+        white-space: nowrap;
+      }
+
+      .record-detail {
+        white-space: nowrap;
+      }
+
+      .record-value {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+      }
+
+      .record-when {
+        font-size: 10px;
+        color: var(--muted, #94a3b8);
+      }
+
       .more-stats-fact-card {
         width: var(--side-stat-card-width, max-content);
         min-height: var(--side-stat-card-min-height, 0px);

@@ -187,3 +187,29 @@ branch and the single-type branch of `update()`.
    legend lists each year with its running total in the active units.
 4. Weekly hover strips show "Through <date>" cumulative values per year via
    the shared tooltip system.
+
+## Records Card
+
+The "Records" labeled card row renders below the Trends/Cumulative Progress
+pair in both the combined-types branch and the single-type branch of
+`update()`. The card is stateless: it has no chips or selections, so it does
+not participate in `Reset All`.
+
+### Computation (`computeRecords`)
+
+1. Best Day sums daily aggregates across the selected types per date; Best
+   Week / Best Month reuse `bucketAggregatesByPeriod` with the configured
+   week start.
+2. Records are tracked per metric (Distance, Time, Elevation, Activities);
+   metrics with no positive value in the current selection are omitted.
+3. Ties keep the earliest period (chronological iteration, strictly-greater
+   replacement).
+
+### Display
+
+1. Three groups — Best Day, Best Week, Best Month — each listing metric rows
+   as "value · when" (e.g. "62.1 mi · Mar 14, 2026"; weeks show their date
+   range). Values use the active units and rebuild on unit toggles and
+   filter changes.
+2. Row tooltips show the period, activity total with per-type breakdown, and
+   non-zero metric totals via the shared tooltip system.
