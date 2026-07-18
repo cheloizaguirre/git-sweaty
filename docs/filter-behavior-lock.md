@@ -120,7 +120,10 @@ Clicking `Reset All` restores default state:
 ## Trends Card
 
 The "Trends" labeled card row renders below "Activity Frequency" in both the
-combined-types branch and the single-type branch of `update()`.
+combined-types branch and the single-type branch of `update()`, side by side
+with "Cumulative Progress" in a shared `.labeled-card-row-pair` container
+(cards keep content width; the content rail is sized at 1250px so the pair
+fits side by side in every Trends view, wrapping only on narrower viewports).
 
 ### Chip behavior (`buildTrendsCard`)
 
@@ -153,3 +156,34 @@ combined-types branch and the single-type branch of `update()`.
 
 1. `Reset All` restores granularity/metric defaults, and non-default trends
    state enables the `Reset All` button (`isDefaultTrendsState`).
+
+## Cumulative Progress Card
+
+The "Cumulative Progress" labeled card row renders side by side with "Trends"
+in a shared `.labeled-card-row-pair` container in both the combined-types
+branch and the single-type branch of `update()`.
+
+### Chip behavior (`buildProgressCard`)
+
+1. Metric chips (`Activities | Distance | Time | Elevation`) are single-select
+   with always exactly one active; clicking the active chip is a no-op.
+   Unavailable metrics follow the shared unavailable-chip treatment.
+2. Default metric is `Distance`, falling back to the first available metric
+   without overwriting the stored selection.
+3. Chip clicks rerender only the progress chart, never the full dashboard.
+4. The selection persists across type/year filter changes and unit toggles via
+   `selectedProgressMetricKey`; only chip clicks (`source === "card"`) update
+   stored state. `Reset All` restores the default and non-default state
+   enables the button (`isDefaultProgressState`).
+
+### Chart behavior
+
+1. One SVG polyline per visible year over a shared Jan–Dec axis
+   (`buildCumulativeSeriesByYear`), cumulative from daily aggregates; years
+   with a zero total for the active metric are omitted.
+2. The current calendar year's line ends at today; prior years extend flat to
+   year end. The current year renders with a heavier stroke.
+3. Line colors cycle the fallback palette by year order (newest first); the
+   legend lists each year with its running total in the active units.
+4. Weekly hover strips show "Through <date>" cumulative values per year via
+   the shared tooltip system.

@@ -95,9 +95,14 @@
         --summary-grid-gap: 15px;
         --summary-desktop-columns: 6;
         --side-stat-card-width-min: 124px;
-        --dashboard-content-rail-width: calc(
-          (var(--summary-desktop-columns) * var(--summary-card-max-width)) +
-          ((var(--summary-desktop-columns) - 1) * var(--summary-grid-gap))
+        /* Wide enough for the summary grid, and for the Trends (weekly view)
+           + Cumulative Progress pair to always render side by side. */
+        --dashboard-content-rail-width: max(
+          calc(
+            (var(--summary-desktop-columns) * var(--summary-card-max-width)) +
+            ((var(--summary-desktop-columns) - 1) * var(--summary-grid-gap))
+          ),
+          1250px
         );
         --radius: 14px;
         --shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
@@ -1067,6 +1072,104 @@
 
       .trends-bar-segment {
         width: 100%;
+      }
+
+      .labeled-card-row-pair {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-6);
+        align-items: flex-start;
+      }
+
+      .labeled-card-row-pair > .labeled-card-row {
+        flex: 0 1 auto;
+        min-width: 0;
+        max-width: 100%;
+      }
+
+      .labeled-card-row-pair > .labeled-card-row > .card {
+        width: max-content;
+        max-width: 100%;
+      }
+
+      .progress-card {
+        display: grid;
+        grid-template-rows: auto auto;
+        row-gap: var(--labeled-card-title-gap);
+      }
+
+      .progress-body {
+        display: grid;
+        row-gap: var(--space-5);
+        width: max-content;
+      }
+
+      .progress-chart-area {
+        border-radius: 6px;
+        background: rgba(15, 23, 42, 0.8);
+        padding: var(--space-3);
+        width: max-content;
+      }
+
+      .progress-svg {
+        display: block;
+      }
+
+      .progress-gridline {
+        stroke: rgba(148, 163, 184, 0.15);
+        stroke-width: 1;
+      }
+
+      .progress-axis-label {
+        fill: var(--muted, #94a3b8);
+        font-size: 10px;
+        font-family: inherit;
+      }
+
+      .progress-axis-label-y {
+        text-anchor: end;
+      }
+
+      .progress-line {
+        fill: none;
+        stroke-width: 1.5;
+        stroke-linejoin: round;
+        stroke-linecap: round;
+        opacity: 0.85;
+      }
+
+      .progress-line-current {
+        stroke-width: 2.5;
+        opacity: 1;
+      }
+
+      .progress-hover-strip {
+        fill: transparent;
+        pointer-events: all;
+      }
+
+      .progress-legend {
+        display: flex;
+        flex-wrap: wrap;
+        column-gap: var(--space-6);
+        row-gap: var(--space-2);
+        align-items: center;
+        font-size: 11px;
+        color: var(--muted, #94a3b8);
+      }
+
+      .progress-legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-2);
+        white-space: nowrap;
+      }
+
+      .progress-legend-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex: 0 0 auto;
       }
 
       .more-stats-fact-card {

@@ -2448,6 +2448,26 @@ const TRENDS_WEEKLY_MONTH_LABEL_COLUMNS = Object.freeze({
 const TRENDS_MONTHLY_DISPLAY_LABELS = Object.freeze([
   "Jan", "", "Mar", "", "May", "", "Jul", "", "Sep", "", "Nov", "",
 ]);
+const PROGRESS_DEFAULT_METRIC_KEY = "distance";
+const PROGRESS_DAYS_IN_YEAR = 366;
+// Keep the total SVG width small enough that the weekly Trends view + the
+// Cumulative Progress card fit side by side inside
+// --dashboard-content-rail-width (1250px).
+const PROGRESS_CHART_LAYOUT = Object.freeze({
+  innerWidth: 440,
+  innerHeight: 170,
+  left: 56,
+  right: 12,
+  top: 10,
+  bottom: 20,
+});
+// Day-of-year (non-leap) for the first day of each month; used for axis ticks.
+const PROGRESS_MONTH_START_DAYS = Object.freeze([
+  1, 32, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335,
+]);
+const PROGRESS_MONTH_DISPLAY_LABELS = TRENDS_MONTHLY_DISPLAY_LABELS;
+const PROGRESS_TOOLTIP_STRIP_DAYS = 7;
+const SVG_NS = "http://www.w3.org/2000/svg";
 const METRIC_LABEL_BY_KEY = Object.freeze({
   [ACTIVE_DAYS_METRIC_KEY]: "Active Days",
   [DAYS_OFF_METRIC_KEY]: "Days Off",
@@ -3901,6 +3921,101 @@ function trendsMonthColumnCountForYear(year, referenceDate = new Date()) {
   return 12;
 }
 
+function progressDayOfYear(dateStr) {
+  const normalized = String(dateStr || "");
+  const year = Number(normalized.slice(0, 4));
+  const month = Number(normalized.slice(5, 7));
+  const day = Number(normalized.slice(8, 10));
+  if (!year || !month || !day || month < 1 || month > 12 || day < 1 || day > 31) {
+    return null;
+  }
+  const dayMs = Date.UTC(year, month - 1, day) - Date.UTC(year, 0, 1);
+  if (!Number.isFinite(dayMs) || dayMs < 0) return null;
+  return Math.round(dayMs / MS_PER_DAY) + 1;
+}
+
+function progressMetricEntryValue(entry, metricKey) {
+  const value = Number(entry?.[metricKey === "count" ? "count" : metricKey] || 0);
+  return Number.isFinite(value) && value > 0 ? value : 0;
+}
+
+function buildCumulativeSeriesByYear(aggregates, types, years, metricKey) {
+  const typeList = Array.isArray(types) ? types : [];
+  const yearsDesc = (Array.isArray(years) ? years : [])
+    .map(Number)
+    .filter(Number.isFinite)
+    .sort((a, b) => b - a);
+  const series = [];
+
+  yearsDesc.forEach((year) => {
+    const yearData = aggregates?.[String(year)] || {};
+    const dayTotals = new Map();
+    typeList.forEach((type) => {
+      Object.entries(yearData?.[type] || {}).forEach(([dateStr, entry]) => {
+        const value = progressMetricEntryValue(entry, metricKey);
+        if (value <= 0) return;
+        const day = progressDayOfYear(dateStr);
+        if (day === null) return;
+        dayTotals.set(day, (dayTotals.get(day) || 0) + value);
+      });
+    });
+    const days = Array.from(dayTotals.keys()).sort((a, b) => a - b);
+    const points = [{ day: 0, value: 0 }];
+    let cumulative = 0;
+    days.forEach((day) => {
+      cumulative += dayTotals.get(day);
+      points.push({ day, value: cumulative });
+    });
+    series.push({ year, points, total: cumulative });
+  });
+
+  return series;
+}
+
+function cumulativeValueAtDay(points, day) {
+  let value = 0;
+  for (let i = 0; i < points.length; i += 1) {
+    if (points[i].day > day) break;
+    value = points[i].value;
+  }
+  return value;
+}
+
+function progressElapsedDayOfYear(year, referenceDate = new Date()) {
+  const currentYear = referenceDate.getFullYear();
+  if (year > currentYear) return 0;
+  if (year < currentYear) return PROGRESS_DAYS_IN_YEAR;
+  const dayMs = Date.UTC(currentYear, referenceDate.getMonth(), referenceDate.getDate())
+    - Date.UTC(currentYear, 0, 1);
+  return Math.max(1, Math.round(dayMs / MS_PER_DAY) + 1);
+}
+
+function formatProgressTick(metricKey, value, units) {
+  if (metricKey === "moving_time") {
+    return `${Math.round(value / 3600).toLocaleString()}h`;
+  }
+  if (metricKey === "distance") {
+    const converted = units?.distance === "km" ? value / 1000 : value / 1609.344;
+    return `${Math.round(converted).toLocaleString()} ${units?.distance === "km" ? "km" : "mi"}`;
+  }
+  if (metricKey === "elevation_gain") {
+    const converted = units?.elevation === "m" ? value : value * 3.28084;
+    return `${Math.round(converted).toLocaleString()} ${units?.elevation === "m" ? "m" : "ft"}`;
+  }
+  return Math.round(value).toLocaleString();
+}
+
+function progressYearColor(index) {
+  return FALLBACK_VAPORWAVE[index % FALLBACK_VAPORWAVE.length];
+}
+
+function progressDayLabel(day) {
+  // Format a day-of-year using a non-leap reference calendar.
+  const reference = new Date(Date.UTC(2001, 0, 1));
+  reference.setUTCDate(reference.getUTCDate() + Math.max(0, Math.min(364, day - 1)));
+  return `${MONTHS[reference.getUTCMonth()]} ${reference.getUTCDate()}`;
+}
+
 function getFilteredActivities(payload, types, years) {
   const activities = payload.activities || [];
   if (!activities.length) return [];
@@ -4890,6 +5005,260 @@ function buildTrendsCard(payload, types, years, options = {}) {
   return card;
 }
 
+function buildProgressCard(payload, types, years, options = {}) {
+  const units = normalizeUnits(options.units || payload.units || DEFAULT_UNITS);
+  const onStateChange = typeof options.onStateChange === "function"
+    ? options.onStateChange
+    : null;
+  const typeList = Array.isArray(types) ? types : [];
+  const yearsDesc = (Array.isArray(years) ? years : []).slice().sort((a, b) => b - a);
+  const aggregates = payload.aggregates || {};
+
+  const yearlyBuckets = bucketAggregatesByPeriod(aggregates, typeList, yearsDesc, "yearly", "sunday");
+  const totals = yearlyBuckets.reduce((acc, bucket) => {
+    acc.count += bucket.count;
+    acc.distance += bucket.distance;
+    acc.moving_time += bucket.moving_time;
+    acc.elevation_gain += bucket.elevation_gain;
+    return acc;
+  }, { count: 0, distance: 0, moving_time: 0, elevation_gain: 0 });
+
+  const metricItems = TRENDS_METRIC_ITEMS.map((item) => ({
+    key: item.key,
+    label: item.label,
+    filterable: Number(totals[item.key] || 0) > 0,
+  }));
+  const filterableMetricKeys = getFilterableKeys(metricItems);
+
+  let activeMetricKey = null;
+  const reportState = (source) => {
+    if (!onStateChange) return;
+    onStateChange({
+      metricKey: activeMetricKey,
+      filterableMetricKeys: filterableMetricKeys.slice(),
+      source,
+    });
+  };
+
+  if (totals.count <= 0 || !yearsDesc.length) {
+    reportState("init");
+    return buildEmptySelectionCard();
+  }
+  const requestedMetricKey = typeof options.initialMetricKey === "string"
+    ? options.initialMetricKey
+    : null;
+  if (requestedMetricKey && filterableMetricKeys.includes(requestedMetricKey)) {
+    activeMetricKey = requestedMetricKey;
+  } else if (filterableMetricKeys.includes(PROGRESS_DEFAULT_METRIC_KEY)) {
+    activeMetricKey = PROGRESS_DEFAULT_METRIC_KEY;
+  } else {
+    activeMetricKey = filterableMetricKeys[0] || "count";
+  }
+
+  const card = document.createElement("div");
+  card.className = "card progress-card";
+
+  const body = document.createElement("div");
+  body.className = "progress-body";
+
+  const controls = document.createElement("div");
+  controls.className = "trends-controls";
+  const metricChipRow = document.createElement("div");
+  metricChipRow.className = "trends-chip-group progress-metric-chips";
+
+  const chartArea = document.createElement("div");
+  chartArea.className = "progress-chart-area";
+  const legend = document.createElement("div");
+  legend.className = "progress-legend";
+
+  const metricButtons = new Map();
+  const renderMetricButtonState = () => renderSingleSelectButtonState(
+    metricItems,
+    metricButtons,
+    activeMetricKey,
+  );
+
+  const svgAttr = (el, attrs) => {
+    Object.entries(attrs).forEach(([name, value]) => {
+      el.setAttribute(name, String(value));
+    });
+    return el;
+  };
+
+  const renderProgressChart = () => {
+    chartArea.innerHTML = "";
+    legend.innerHTML = "";
+    const layout = PROGRESS_CHART_LAYOUT;
+    const width = layout.left + layout.innerWidth + layout.right;
+    const height = layout.top + layout.innerHeight + layout.bottom;
+    const xForDay = (day) => layout.left
+      + (Math.max(0, Math.min(PROGRESS_DAYS_IN_YEAR, day)) / PROGRESS_DAYS_IN_YEAR)
+      * layout.innerWidth;
+
+    const series = buildCumulativeSeriesByYear(aggregates, typeList, yearsDesc, activeMetricKey);
+    const visibleSeries = series.filter((entry) => entry.total > 0);
+    const metricLabel = TRENDS_METRIC_ITEMS.find((item) => item.key === activeMetricKey)?.label
+      || "Metric";
+    const yMax = visibleSeries.reduce((acc, entry) => Math.max(acc, entry.total), 0);
+    const yForValue = (value) => layout.top + layout.innerHeight
+      - (yMax > 0 ? (value / yMax) * layout.innerHeight : 0);
+
+    const svg = document.createElementNS(SVG_NS, "svg");
+    svgAttr(svg, {
+      viewBox: `0 0 ${width} ${height}`,
+      width,
+      height,
+      role: "img",
+      "aria-label": `Cumulative ${metricLabel} by year`,
+    });
+    svg.classList.add("progress-svg");
+
+    // Month gridlines + labels.
+    PROGRESS_MONTH_START_DAYS.forEach((day, monthIndex) => {
+      const x = xForDay(day - 1);
+      const line = document.createElementNS(SVG_NS, "line");
+      svgAttr(line, {
+        x1: x, y1: layout.top, x2: x, y2: layout.top + layout.innerHeight,
+        class: "progress-gridline",
+      });
+      svg.appendChild(line);
+      const labelText = PROGRESS_MONTH_DISPLAY_LABELS[monthIndex];
+      if (labelText) {
+        const label = document.createElementNS(SVG_NS, "text");
+        svgAttr(label, {
+          x, y: layout.top + layout.innerHeight + 14, class: "progress-axis-label",
+        });
+        label.textContent = labelText;
+        svg.appendChild(label);
+      }
+    });
+
+    // Y gridlines + tick labels at 25/50/75/100%.
+    [0.25, 0.5, 0.75, 1].forEach((fraction) => {
+      const value = yMax * fraction;
+      const y = yForValue(value);
+      const line = document.createElementNS(SVG_NS, "line");
+      svgAttr(line, {
+        x1: layout.left, y1: y, x2: layout.left + layout.innerWidth, y2: y,
+        class: "progress-gridline",
+      });
+      svg.appendChild(line);
+      const label = document.createElementNS(SVG_NS, "text");
+      svgAttr(label, {
+        x: layout.left - 6, y: y + 3,
+        class: "progress-axis-label progress-axis-label-y",
+      });
+      label.textContent = formatProgressTick(activeMetricKey, value, units);
+      svg.appendChild(label);
+    });
+
+    const currentYear = new Date().getFullYear();
+    visibleSeries.forEach((entry, index) => {
+      const color = progressYearColor(index);
+      const lastDay = progressElapsedDayOfYear(entry.year);
+      const linePoints = entry.points
+        .map((point) => `${xForDay(point.day).toFixed(1)},${yForValue(point.value).toFixed(1)}`);
+      linePoints.push(`${xForDay(lastDay).toFixed(1)},${yForValue(entry.total).toFixed(1)}`);
+      const polyline = document.createElementNS(SVG_NS, "polyline");
+      svgAttr(polyline, {
+        points: linePoints.join(" "),
+        class: entry.year === currentYear
+          ? "progress-line progress-line-current"
+          : "progress-line",
+        stroke: color,
+      });
+      svg.appendChild(polyline);
+      const endDot = document.createElementNS(SVG_NS, "circle");
+      svgAttr(endDot, {
+        cx: xForDay(lastDay).toFixed(1),
+        cy: yForValue(entry.total).toFixed(1),
+        r: 2.5,
+        fill: color,
+        class: "progress-line-end",
+      });
+      svg.appendChild(endDot);
+    });
+
+    // Weekly hover strips with cumulative values per year.
+    const stripCount = Math.ceil(PROGRESS_DAYS_IN_YEAR / PROGRESS_TOOLTIP_STRIP_DAYS);
+    for (let strip = 0; strip < stripCount; strip += 1) {
+      const startDay = strip * PROGRESS_TOOLTIP_STRIP_DAYS;
+      const endDay = Math.min(PROGRESS_DAYS_IN_YEAR, startDay + PROGRESS_TOOLTIP_STRIP_DAYS);
+      const lines = [`Through ${progressDayLabel(endDay)}`];
+      visibleSeries.forEach((entry) => {
+        const elapsed = progressElapsedDayOfYear(entry.year);
+        if (startDay >= elapsed) return;
+        const clampedDay = Math.min(endDay, elapsed);
+        const value = cumulativeValueAtDay(entry.points, clampedDay);
+        lines.push(`${entry.year}: ${formatTrendsMetricValue(activeMetricKey, value, units)}`);
+      });
+      if (lines.length <= 1) continue;
+      const rect = document.createElementNS(SVG_NS, "rect");
+      svgAttr(rect, {
+        x: xForDay(startDay).toFixed(1),
+        y: layout.top,
+        width: (xForDay(endDay) - xForDay(startDay)).toFixed(1),
+        height: layout.innerHeight,
+        class: "progress-hover-strip",
+      });
+      attachTooltip(rect, lines.join("\n"));
+      svg.appendChild(rect);
+    }
+
+    chartArea.appendChild(svg);
+
+    visibleSeries.forEach((entry, index) => {
+      const item = document.createElement("div");
+      item.className = "progress-legend-item";
+      const dot = document.createElement("span");
+      dot.className = "progress-legend-dot";
+      dot.style.background = progressYearColor(index);
+      const text = document.createElement("span");
+      text.textContent = `${entry.year} · ${formatTrendsMetricValue(activeMetricKey, entry.total, units)}`;
+      item.appendChild(dot);
+      item.appendChild(text);
+      legend.appendChild(item);
+    });
+  };
+
+  metricItems.forEach((item) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "more-stats-metric-chip trends-chip";
+    chip.textContent = item.label;
+    chip.setAttribute("aria-disabled", item.filterable ? "false" : "true");
+    chip.setAttribute("aria-pressed", "false");
+    if (item.filterable) {
+      chip.addEventListener("click", () => {
+        if (activeMetricKey === item.key) return;
+        activeMetricKey = item.key;
+        renderMetricButtonState();
+        renderProgressChart();
+        reportState("card");
+      });
+    } else {
+      const unavailableReason = getFrequencyMetricUnavailableReason(item.key, item.label);
+      chip.classList.add("is-unavailable");
+      chip.title = unavailableReason;
+      chip.setAttribute("aria-label", `${item.label} unavailable. ${unavailableReason}`);
+      attachTooltip(chip, unavailableReason);
+    }
+    metricButtons.set(item.key, chip);
+    metricChipRow.appendChild(chip);
+  });
+
+  renderMetricButtonState();
+  renderProgressChart();
+  reportState("init");
+
+  controls.appendChild(metricChipRow);
+  body.appendChild(controls);
+  body.appendChild(chartArea);
+  body.appendChild(legend);
+  card.appendChild(body);
+  return card;
+}
+
 function renderLoadError(error) {
   const detail = error && typeof error.message === "string" && error.message
     ? error.message
@@ -5040,6 +5409,19 @@ async function init() {
   let draftYearMenuSelection = null;
   let selectedTrendsGranularity = TRENDS_DEFAULT_GRANULARITY;
   let selectedTrendsMetricKey = TRENDS_DEFAULT_METRIC_KEY;
+  let selectedProgressMetricKey = PROGRESS_DEFAULT_METRIC_KEY;
+
+  const onProgressStateChange = ({ metricKey, source }) => {
+    if (source !== "card") return;
+    selectedProgressMetricKey = TRENDS_METRIC_ITEMS.some((item) => item.key === metricKey)
+      ? metricKey
+      : PROGRESS_DEFAULT_METRIC_KEY;
+    syncResetAllButtonState();
+  };
+
+  function isDefaultProgressState() {
+    return selectedProgressMetricKey === PROGRESS_DEFAULT_METRIC_KEY;
+  }
 
   const onTrendsStateChange = ({ granularity, metricKey, source }) => {
     if (source !== "card") return;
@@ -5074,7 +5456,8 @@ async function init() {
       && !hasAnyYearMetricSelection()
       && !selectedFrequencyFactKey
       && !hasAnyFrequencyMetricSelection()
-      && isDefaultTrendsState();
+      && isDefaultTrendsState()
+      && isDefaultProgressState();
   }
 
   function syncResetAllButtonState() {
@@ -5473,13 +5856,29 @@ async function init() {
             onStateChange: onTrendsStateChange,
           });
           setCardScrollKey(trendsCard, `${combinedSelectionKey}:trends`);
-          list.appendChild(
+          const progressCard = buildProgressCard(payload, types, cardYears, {
+            units: currentUnits,
+            initialMetricKey: selectedProgressMetricKey,
+            onStateChange: onProgressStateChange,
+          });
+          setCardScrollKey(progressCard, `${combinedSelectionKey}:progress`);
+          const pairRow = document.createElement("div");
+          pairRow.className = "labeled-card-row-pair";
+          pairRow.appendChild(
             buildLabeledCardRow(
               "Trends",
               trendsCard,
               "trends",
             ),
           );
+          pairRow.appendChild(
+            buildLabeledCardRow(
+              "Cumulative Progress",
+              progressCard,
+              "progress",
+            ),
+          );
+          list.appendChild(pairRow);
         }
         cardYears.forEach((year) => {
           const yearData = payload.aggregates?.[String(year)] || {};
@@ -5562,13 +5961,29 @@ async function init() {
               onStateChange: onTrendsStateChange,
             });
             setCardScrollKey(trendsCard, `${typeCardKey}:trends`);
-            list.appendChild(
+            const progressCard = buildProgressCard(payload, [type], cardYears, {
+              units: currentUnits,
+              initialMetricKey: selectedProgressMetricKey,
+              onStateChange: onProgressStateChange,
+            });
+            setCardScrollKey(progressCard, `${typeCardKey}:progress`);
+            const pairRow = document.createElement("div");
+            pairRow.className = "labeled-card-row-pair";
+            pairRow.appendChild(
               buildLabeledCardRow(
                 "Trends",
                 trendsCard,
                 "trends",
               ),
             );
+            pairRow.appendChild(
+              buildLabeledCardRow(
+                "Cumulative Progress",
+                progressCard,
+                "progress",
+              ),
+            );
+            list.appendChild(pairRow);
           }
           cardYears.forEach((year) => {
             const aggregates = payload.aggregates?.[String(year)]?.[type] || {};
@@ -5777,6 +6192,7 @@ async function init() {
       visibleFrequencyFilterableMetricKeys.clear();
       selectedTrendsGranularity = TRENDS_DEFAULT_GRANULARITY;
       selectedTrendsMetricKey = TRENDS_DEFAULT_METRIC_KEY;
+      selectedProgressMetricKey = PROGRESS_DEFAULT_METRIC_KEY;
       hoverClearedSummaryType = null;
       hoverClearedSummaryYearMetricKey = null;
       update({
