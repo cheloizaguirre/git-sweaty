@@ -116,3 +116,40 @@ Clicking `Reset All` restores default state:
 
 1. Each year/frequency card uses a stable scroll key per logical card identity.
 2. On full dashboard rerender, horizontal `scrollLeft` is restored for matching cards when possible.
+
+## Trends Card
+
+The "Trends" labeled card row renders below "Activity Frequency" in both the
+combined-types branch and the single-type branch of `update()`.
+
+### Chip behavior (`buildTrendsCard`)
+
+1. Granularity chips (`Weekly | Monthly | Yearly`) are single-select with always
+   exactly one active; clicking the active chip is a no-op (no toggle-off).
+2. Metric chips (`Activities | Distance | Time | Elevation`) follow the same
+   always-one-active rule. Metrics with a zero total for the current selection
+   render as unavailable (same treatment as frequency metric chips).
+3. Chip clicks rerender only the trends chart, never the full dashboard.
+4. Defaults are `Monthly` + `Distance`. When `Distance` is unavailable the
+   displayed metric falls back to the first available metric (ultimately
+   `Activities`), without overwriting the stored selection.
+5. Selections persist across type/year filter changes and unit toggles via
+   `selectedTrendsGranularity` / `selectedTrendsMetricKey` in `init()`; only
+   user chip clicks (`source === "card"`) update stored state.
+
+### Chart behavior
+
+1. Bars are computed client-side from `payload.aggregates` via
+   `bucketAggregatesByPeriod`; weekly buckets use `weekOfYear` within the
+   activity's own year and respect the configured week start.
+2. Weekly/monthly views render one row per visible year (newest first) with a
+   shared max scale across rows; yearly renders a single chronological row.
+3. Multi-type selections stack bar segments per type using type accent colors.
+4. Future periods in the current year render as void slots (no baseline).
+5. Bar tooltips show the period label, activity total with per-type breakdown,
+   and non-zero Distance/Time/Elevation totals in the active units.
+
+### Reset-all interaction
+
+1. `Reset All` restores granularity/metric defaults, and non-default trends
+   state enables the `Reset All` button (`isDefaultTrendsState`).

@@ -2421,6 +2421,33 @@ const FREQUENCY_METRIC_ITEMS = [
   { key: "moving_time", label: "Time" },
   { key: "elevation_gain", label: "Elevation" },
 ];
+const TRENDS_GRANULARITY_ITEMS = [
+  { key: "weekly", label: "Weekly" },
+  { key: "monthly", label: "Monthly" },
+  { key: "yearly", label: "Yearly" },
+];
+const TRENDS_METRIC_ITEMS = [
+  { key: "count", label: "Activities" },
+  { key: "distance", label: "Distance" },
+  { key: "moving_time", label: "Time" },
+  { key: "elevation_gain", label: "Elevation" },
+];
+const TRENDS_DEFAULT_GRANULARITY = "monthly";
+const TRENDS_DEFAULT_METRIC_KEY = "distance";
+const TRENDS_CHART_HEIGHT_PX = 64;
+const TRENDS_LAYOUT_BY_GRANULARITY = Object.freeze({
+  weekly: Object.freeze({ barWidth: 8, barGap: 2 }),
+  monthly: Object.freeze({ barWidth: 22, barGap: 4 }),
+  yearly: Object.freeze({ barWidth: 30, barGap: 8 }),
+});
+// Sparse month labels for weekly columns: column of the week containing the
+// first day of every other month (day-of-year / 7).
+const TRENDS_WEEKLY_MONTH_LABEL_COLUMNS = Object.freeze({
+  0: "Jan", 8: "Mar", 17: "May", 25: "Jul", 34: "Sep", 43: "Nov",
+});
+const TRENDS_MONTHLY_DISPLAY_LABELS = Object.freeze([
+  "Jan", "", "Mar", "", "May", "", "Jul", "", "Sep", "", "Nov", "",
+]);
 const METRIC_LABEL_BY_KEY = Object.freeze({
   [ACTIVE_DAYS_METRIC_KEY]: "Active Days",
   [DAYS_OFF_METRIC_KEY]: "Days Off",
@@ -3747,6 +3774,133 @@ function combineYearAggregates(yearData, types) {
   return result;
 }
 
+function trendsPeriodForDate(dateStr, granularity, weekStart) {
+  const normalized = String(dateStr || "");
+  const year = Number(normalized.slice(0, 4));
+  if (!Number.isFinite(year) || year <= 0) return null;
+  if (granularity === "yearly") {
+    return { key: normalized.slice(0, 4), year, index: 0 };
+  }
+  if (granularity === "monthly") {
+    const monthIndex = Number(normalized.slice(5, 7)) - 1;
+    if (!Number.isFinite(monthIndex) || monthIndex < 0 || monthIndex > 11) return null;
+    return { key: normalized.slice(0, 7), year, index: monthIndex };
+  }
+  const date = new Date(`${normalized}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return null;
+  const weekIndex = weekOfYear(date, weekStart);
+  if (!Number.isFinite(weekIndex) || weekIndex < 1) return null;
+  return {
+    key: `${year}-W${String(weekIndex).padStart(2, "0")}`,
+    year,
+    index: weekIndex - 1,
+  };
+}
+
+function bucketAggregatesByPeriod(aggregates, types, years, granularity, weekStart) {
+  const normalizedWeekStart = normalizeWeekStart(weekStart);
+  const typeList = Array.isArray(types) ? types : [];
+  const yearList = Array.isArray(years) ? years : [];
+  const buckets = new Map();
+
+  yearList.forEach((year) => {
+    const yearData = aggregates?.[String(year)] || {};
+    typeList.forEach((type) => {
+      Object.entries(yearData?.[type] || {}).forEach(([dateStr, entry]) => {
+        const period = trendsPeriodForDate(dateStr, granularity, normalizedWeekStart);
+        if (!period) return;
+        let bucket = buckets.get(period.key);
+        if (!bucket) {
+          bucket = {
+            key: period.key,
+            year: period.year,
+            index: period.index,
+            count: 0,
+            distance: 0,
+            moving_time: 0,
+            elevation_gain: 0,
+            perType: {},
+          };
+          buckets.set(period.key, bucket);
+        }
+        const count = Number(entry?.count || 0);
+        const distance = Number(entry?.distance || 0);
+        const movingTime = Number(entry?.moving_time || 0);
+        const elevationGain = Number(entry?.elevation_gain || 0);
+        bucket.count += count;
+        bucket.distance += distance;
+        bucket.moving_time += movingTime;
+        bucket.elevation_gain += elevationGain;
+        let perType = bucket.perType[type];
+        if (!perType) {
+          perType = { count: 0, distance: 0, moving_time: 0, elevation_gain: 0 };
+          bucket.perType[type] = perType;
+        }
+        perType.count += count;
+        perType.distance += distance;
+        perType.moving_time += movingTime;
+        perType.elevation_gain += elevationGain;
+      });
+    });
+  });
+
+  return Array.from(buckets.values())
+    .sort((a, b) => String(a.key).localeCompare(String(b.key)));
+}
+
+function trendsMetricValue(bucket, metricKey) {
+  const value = Number(bucket?.[metricKey] || 0);
+  return Number.isFinite(value) && value > 0 ? value : 0;
+}
+
+function formatTrendsMetricValue(metricKey, value, units) {
+  if (metricKey === "count") {
+    return formatNumber(value, 0);
+  }
+  return formatMetricTotal(metricKey, value, units);
+}
+
+function trendsWeekRangeLabel(year, weekIndex, weekStart) {
+  const yearStart = new Date(year, 0, 1);
+  const gridStart = weekStartOnOrBeforeLocal(yearStart, weekStart);
+  const start = new Date(gridStart.getTime());
+  start.setDate(start.getDate() + weekIndex * 7);
+  const end = new Date(start.getTime());
+  end.setDate(end.getDate() + 6);
+  const clampedStart = start.getFullYear() < year ? yearStart : start;
+  const yearEnd = new Date(year, 11, 31);
+  const clampedEnd = end.getFullYear() > year ? yearEnd : end;
+  const formatDay = (d) => `${MONTHS[d.getMonth()]} ${d.getDate()}`;
+  return `${formatDay(clampedStart)} – ${formatDay(clampedEnd)}`;
+}
+
+function trendsPeriodLabel(bucket, granularity, weekStart) {
+  if (granularity === "yearly") {
+    return String(bucket.year);
+  }
+  if (granularity === "monthly") {
+    return `${MONTHS[bucket.index] || ""} ${bucket.year}`;
+  }
+  const range = trendsWeekRangeLabel(bucket.year, bucket.index, weekStart);
+  return `${bucket.year} · Week ${bucket.index + 1} (${range})`;
+}
+
+function trendsWeekColumnCountForYear(year, weekStart, referenceDate = new Date()) {
+  const currentYear = referenceDate.getFullYear();
+  const lastDay = year === currentYear
+    ? new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate())
+    : new Date(year, 11, 31);
+  if (year > currentYear) return 0;
+  return weekOfYear(lastDay, weekStart);
+}
+
+function trendsMonthColumnCountForYear(year, referenceDate = new Date()) {
+  const currentYear = referenceDate.getFullYear();
+  if (year > currentYear) return 0;
+  if (year === currentYear) return referenceDate.getMonth() + 1;
+  return 12;
+}
+
 function getFilteredActivities(payload, types, years) {
   const activities = payload.activities || [];
   if (!activities.length) return [];
@@ -4419,6 +4573,323 @@ function buildYearMatrix(years, colLabels, matrixValues, color, options = {}) {
   return container;
 }
 
+function buildTrendsCard(payload, types, years, options = {}) {
+  const units = normalizeUnits(options.units || payload.units || DEFAULT_UNITS);
+  const weekStart = normalizeWeekStart(options.weekStart);
+  const onStateChange = typeof options.onStateChange === "function"
+    ? options.onStateChange
+    : null;
+  const typeList = Array.isArray(types) ? types : [];
+  const yearsDesc = (Array.isArray(years) ? years : []).slice().sort((a, b) => b - a);
+  const aggregates = payload.aggregates || {};
+
+  const granularityKeys = TRENDS_GRANULARITY_ITEMS.map((item) => item.key);
+  let activeGranularity = granularityKeys.includes(options.initialGranularity)
+    ? options.initialGranularity
+    : TRENDS_DEFAULT_GRANULARITY;
+
+  const yearlyBuckets = bucketAggregatesByPeriod(aggregates, typeList, yearsDesc, "yearly", weekStart);
+  const totals = yearlyBuckets.reduce((acc, bucket) => {
+    acc.count += bucket.count;
+    acc.distance += bucket.distance;
+    acc.moving_time += bucket.moving_time;
+    acc.elevation_gain += bucket.elevation_gain;
+    return acc;
+  }, { count: 0, distance: 0, moving_time: 0, elevation_gain: 0 });
+
+  const metricItems = TRENDS_METRIC_ITEMS.map((item) => ({
+    key: item.key,
+    label: item.label,
+    filterable: Number(totals[item.key] || 0) > 0,
+  }));
+  const filterableMetricKeys = getFilterableKeys(metricItems);
+
+  const reportState = (source) => {
+    if (!onStateChange) return;
+    onStateChange({
+      granularity: activeGranularity,
+      metricKey: activeMetricKey,
+      filterableMetricKeys: filterableMetricKeys.slice(),
+      source,
+    });
+  };
+
+  let activeMetricKey = null;
+  if (totals.count <= 0 || !yearsDesc.length) {
+    reportState("init");
+    return buildEmptySelectionCard();
+  }
+  const requestedMetricKey = typeof options.initialMetricKey === "string"
+    ? options.initialMetricKey
+    : null;
+  if (requestedMetricKey && filterableMetricKeys.includes(requestedMetricKey)) {
+    activeMetricKey = requestedMetricKey;
+  } else if (filterableMetricKeys.includes(TRENDS_DEFAULT_METRIC_KEY)) {
+    activeMetricKey = TRENDS_DEFAULT_METRIC_KEY;
+  } else {
+    activeMetricKey = filterableMetricKeys[0] || "count";
+  }
+
+  const card = document.createElement("div");
+  card.className = "card trends-card";
+
+  const body = document.createElement("div");
+  body.className = "trends-body";
+
+  const controls = document.createElement("div");
+  controls.className = "trends-controls";
+
+  const granularityChipRow = document.createElement("div");
+  granularityChipRow.className = "trends-chip-group trends-granularity-chips";
+  const metricChipRow = document.createElement("div");
+  metricChipRow.className = "trends-chip-group trends-metric-chips";
+
+  const chartArea = document.createElement("div");
+  chartArea.className = "trends-chart-area";
+
+  const granularityButtons = new Map();
+  const metricButtons = new Map();
+  const renderGranularityButtonState = () => renderSingleSelectButtonState(
+    TRENDS_GRANULARITY_ITEMS,
+    granularityButtons,
+    activeGranularity,
+  );
+  const renderMetricButtonState = () => renderSingleSelectButtonState(
+    metricItems,
+    metricButtons,
+    activeMetricKey,
+  );
+
+  const buildBarTooltip = (bucket) => {
+    const lines = [trendsPeriodLabel(bucket, activeGranularity, weekStart)];
+    const breakdown = createTooltipBreakdown();
+    Object.entries(bucket.perType || {}).forEach(([type, perType]) => {
+      breakdown.typeCounts[type] = Number(perType?.count || 0);
+    });
+    lines.push(formatTooltipBreakdown(bucket.count, breakdown, typeList));
+    TRENDS_METRIC_ITEMS.forEach((item) => {
+      if (item.key === "count") return;
+      const value = trendsMetricValue(bucket, item.key);
+      if (value <= 0) return;
+      lines.push(`${item.label}: ${formatTrendsMetricValue(item.key, value, units)}`);
+    });
+    return lines.join("\n");
+  };
+
+  const buildBarsRow = (rowBuckets, columnCount, validColumnCount, layout, max) => {
+    const bars = document.createElement("div");
+    bars.className = "trends-bars";
+    bars.style.gridTemplateColumns = `repeat(${columnCount}, ${layout.barWidth}px)`;
+    bars.style.columnGap = `${layout.barGap}px`;
+    bars.style.height = `${TRENDS_CHART_HEIGHT_PX}px`;
+    const bucketsByIndex = new Map();
+    rowBuckets.forEach((bucket) => {
+      bucketsByIndex.set(bucket.index, bucket);
+    });
+    for (let col = 0; col < columnCount; col += 1) {
+      const slot = document.createElement("div");
+      slot.className = "trends-bar-slot";
+      slot.style.gridColumn = String(col + 1);
+      if (col >= validColumnCount) {
+        slot.classList.add("trends-bar-slot-void");
+        bars.appendChild(slot);
+        continue;
+      }
+      const bucket = bucketsByIndex.get(col);
+      const value = bucket ? trendsMetricValue(bucket, activeMetricKey) : 0;
+      if (bucket && value > 0 && max > 0) {
+        const bar = document.createElement("div");
+        bar.className = "trends-bar";
+        const barHeight = Math.max(2, Math.round((value / max) * TRENDS_CHART_HEIGHT_PX));
+        typeList.forEach((type) => {
+          const perTypeValue = trendsMetricValue(bucket.perType?.[type], activeMetricKey);
+          if (perTypeValue <= 0) return;
+          const segment = document.createElement("div");
+          segment.className = "trends-bar-segment";
+          segment.style.height = `${Math.max(1, Math.round((perTypeValue / value) * barHeight))}px`;
+          segment.style.background = getColors(type)[4];
+          bar.appendChild(segment);
+        });
+        if (!bar.childElementCount) {
+          const segment = document.createElement("div");
+          segment.className = "trends-bar-segment";
+          segment.style.height = `${barHeight}px`;
+          segment.style.background = getActivityFrequencyCardColor(typeList);
+          bar.appendChild(segment);
+        }
+        slot.appendChild(bar);
+      }
+      if (bucket) {
+        attachTooltip(slot, buildBarTooltip(bucket));
+      }
+      bars.appendChild(slot);
+    }
+    return bars;
+  };
+
+  const buildLabelRow = (labelsByColumn, columnCount, layout) => {
+    const labelRow = document.createElement("div");
+    labelRow.className = "trends-x-labels";
+    labelRow.style.width = `${columnCount * layout.barWidth + (columnCount - 1) * layout.barGap}px`;
+    Object.entries(labelsByColumn).forEach(([col, text]) => {
+      const columnIndex = Number(col);
+      if (!text || columnIndex >= columnCount) return;
+      const label = document.createElement("div");
+      label.className = "trends-x-label";
+      label.textContent = text;
+      label.style.left = `${columnIndex * (layout.barWidth + layout.barGap)}px`;
+      labelRow.appendChild(label);
+    });
+    return labelRow;
+  };
+
+  const renderTrendsChart = () => {
+    chartArea.innerHTML = "";
+    const layout = TRENDS_LAYOUT_BY_GRANULARITY[activeGranularity]
+      || TRENDS_LAYOUT_BY_GRANULARITY[TRENDS_DEFAULT_GRANULARITY];
+    const buckets = activeGranularity === "yearly"
+      ? yearlyBuckets
+      : bucketAggregatesByPeriod(aggregates, typeList, yearsDesc, activeGranularity, weekStart);
+    const max = buckets.reduce(
+      (acc, bucket) => Math.max(acc, trendsMetricValue(bucket, activeMetricKey)),
+      0,
+    );
+
+    if (activeGranularity === "yearly") {
+      const bucketsAsc = buckets.slice();
+      bucketsAsc.forEach((bucket, index) => {
+        bucket.index = index;
+      });
+      const columnCount = bucketsAsc.length;
+      const labelsByColumn = {};
+      bucketsAsc.forEach((bucket, index) => {
+        labelsByColumn[index] = String(bucket.year);
+      });
+      const row = document.createElement("div");
+      row.className = "trends-row";
+      const rowLabel = document.createElement("div");
+      rowLabel.className = "trends-year-label";
+      rowLabel.textContent = "";
+      const column = document.createElement("div");
+      column.className = "trends-row-chart";
+      column.appendChild(buildLabelRow(labelsByColumn, columnCount, layout));
+      column.appendChild(buildBarsRow(bucketsAsc, columnCount, columnCount, layout, max));
+      row.appendChild(rowLabel);
+      row.appendChild(column);
+      chartArea.appendChild(row);
+      return;
+    }
+
+    const isWeekly = activeGranularity === "weekly";
+    const columnCount = isWeekly
+      ? Math.max(...yearsDesc.map((year) => trendsWeekColumnCountForYear(Number(year), weekStart)), 1)
+      : 12;
+    const labelsByColumn = isWeekly
+      ? TRENDS_WEEKLY_MONTH_LABEL_COLUMNS
+      : TRENDS_MONTHLY_DISPLAY_LABELS.reduce((acc, text, index) => {
+        if (text) acc[index] = text;
+        return acc;
+      }, {});
+    const bucketsByYear = new Map();
+    buckets.forEach((bucket) => {
+      const rowBuckets = bucketsByYear.get(bucket.year) || [];
+      rowBuckets.push(bucket);
+      bucketsByYear.set(bucket.year, rowBuckets);
+    });
+
+    const header = document.createElement("div");
+    header.className = "trends-row trends-header-row";
+    const headerLabel = document.createElement("div");
+    headerLabel.className = "trends-year-label";
+    headerLabel.textContent = "";
+    const headerChart = document.createElement("div");
+    headerChart.className = "trends-row-chart";
+    headerChart.appendChild(buildLabelRow(labelsByColumn, columnCount, layout));
+    header.appendChild(headerLabel);
+    header.appendChild(headerChart);
+    chartArea.appendChild(header);
+
+    yearsDesc.forEach((year) => {
+      const numericYear = Number(year);
+      const validColumnCount = isWeekly
+        ? trendsWeekColumnCountForYear(numericYear, weekStart)
+        : trendsMonthColumnCountForYear(numericYear);
+      const row = document.createElement("div");
+      row.className = "trends-row";
+      const rowLabel = document.createElement("div");
+      rowLabel.className = "trends-year-label";
+      rowLabel.textContent = String(year);
+      const column = document.createElement("div");
+      column.className = "trends-row-chart";
+      column.appendChild(buildBarsRow(
+        bucketsByYear.get(numericYear) || [],
+        columnCount,
+        Math.max(0, Math.min(validColumnCount, columnCount)),
+        layout,
+        max,
+      ));
+      row.appendChild(rowLabel);
+      row.appendChild(column);
+      chartArea.appendChild(row);
+    });
+  };
+
+  TRENDS_GRANULARITY_ITEMS.forEach((item) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "more-stats-metric-chip trends-chip";
+    chip.textContent = item.label;
+    chip.setAttribute("aria-pressed", "false");
+    chip.addEventListener("click", () => {
+      if (activeGranularity === item.key) return;
+      activeGranularity = item.key;
+      renderGranularityButtonState();
+      renderTrendsChart();
+      reportState("card");
+    });
+    granularityButtons.set(item.key, chip);
+    granularityChipRow.appendChild(chip);
+  });
+
+  metricItems.forEach((item) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "more-stats-metric-chip trends-chip";
+    chip.textContent = item.label;
+    chip.setAttribute("aria-disabled", item.filterable ? "false" : "true");
+    chip.setAttribute("aria-pressed", "false");
+    if (item.filterable) {
+      chip.addEventListener("click", () => {
+        if (activeMetricKey === item.key) return;
+        activeMetricKey = item.key;
+        renderMetricButtonState();
+        renderTrendsChart();
+        reportState("card");
+      });
+    } else {
+      const unavailableReason = getFrequencyMetricUnavailableReason(item.key, item.label);
+      chip.classList.add("is-unavailable");
+      chip.title = unavailableReason;
+      chip.setAttribute("aria-label", `${item.label} unavailable. ${unavailableReason}`);
+      attachTooltip(chip, unavailableReason);
+    }
+    metricButtons.set(item.key, chip);
+    metricChipRow.appendChild(chip);
+  });
+
+  renderGranularityButtonState();
+  renderMetricButtonState();
+  renderTrendsChart();
+  reportState("init");
+
+  controls.appendChild(granularityChipRow);
+  controls.appendChild(metricChipRow);
+  body.appendChild(controls);
+  body.appendChild(chartArea);
+  card.appendChild(body);
+  return card;
+}
+
 function renderLoadError(error) {
   const detail = error && typeof error.message === "string" && error.message
     ? error.message
@@ -4567,6 +5038,24 @@ async function init() {
   let visibleFrequencyFilterableMetricKeys = new Set();
   let draftTypeMenuSelection = null;
   let draftYearMenuSelection = null;
+  let selectedTrendsGranularity = TRENDS_DEFAULT_GRANULARITY;
+  let selectedTrendsMetricKey = TRENDS_DEFAULT_METRIC_KEY;
+
+  const onTrendsStateChange = ({ granularity, metricKey, source }) => {
+    if (source !== "card") return;
+    selectedTrendsGranularity = TRENDS_GRANULARITY_ITEMS.some((item) => item.key === granularity)
+      ? granularity
+      : TRENDS_DEFAULT_GRANULARITY;
+    selectedTrendsMetricKey = TRENDS_METRIC_ITEMS.some((item) => item.key === metricKey)
+      ? metricKey
+      : TRENDS_DEFAULT_METRIC_KEY;
+    syncResetAllButtonState();
+  };
+
+  function isDefaultTrendsState() {
+    return selectedTrendsGranularity === TRENDS_DEFAULT_GRANULARITY
+      && selectedTrendsMetricKey === TRENDS_DEFAULT_METRIC_KEY;
+  }
 
   function hasAnyYearMetricSelection() {
     for (const metricKey of selectedYearMetricByYear.values()) {
@@ -4584,7 +5073,8 @@ async function init() {
       && areAllYearsSelected()
       && !hasAnyYearMetricSelection()
       && !selectedFrequencyFactKey
-      && !hasAnyFrequencyMetricSelection();
+      && !hasAnyFrequencyMetricSelection()
+      && isDefaultTrendsState();
   }
 
   function syncResetAllButtonState() {
@@ -4975,6 +5465,21 @@ async function init() {
               "frequency",
             ),
           );
+          const trendsCard = buildTrendsCard(payload, types, cardYears, {
+            units: currentUnits,
+            weekStart: setupWeekStart,
+            initialGranularity: selectedTrendsGranularity,
+            initialMetricKey: selectedTrendsMetricKey,
+            onStateChange: onTrendsStateChange,
+          });
+          setCardScrollKey(trendsCard, `${combinedSelectionKey}:trends`);
+          list.appendChild(
+            buildLabeledCardRow(
+              "Trends",
+              trendsCard,
+              "trends",
+            ),
+          );
         }
         cardYears.forEach((year) => {
           const yearData = payload.aggregates?.[String(year)] || {};
@@ -5047,6 +5552,21 @@ async function init() {
                 "Activity Frequency",
                 frequencyCard,
                 "frequency",
+              ),
+            );
+            const trendsCard = buildTrendsCard(payload, [type], cardYears, {
+              units: currentUnits,
+              weekStart: setupWeekStart,
+              initialGranularity: selectedTrendsGranularity,
+              initialMetricKey: selectedTrendsMetricKey,
+              onStateChange: onTrendsStateChange,
+            });
+            setCardScrollKey(trendsCard, `${typeCardKey}:trends`);
+            list.appendChild(
+              buildLabeledCardRow(
+                "Trends",
+                trendsCard,
+                "trends",
               ),
             );
           }
@@ -5255,6 +5775,8 @@ async function init() {
       visibleFrequencyFilterableFactKeys.clear();
       selectedFrequencyMetricKey = null;
       visibleFrequencyFilterableMetricKeys.clear();
+      selectedTrendsGranularity = TRENDS_DEFAULT_GRANULARITY;
+      selectedTrendsMetricKey = TRENDS_DEFAULT_METRIC_KEY;
       hoverClearedSummaryType = null;
       hoverClearedSummaryYearMetricKey = null;
       update({
