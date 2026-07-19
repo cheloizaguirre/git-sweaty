@@ -22,6 +22,7 @@ Status record for the aggregate-visualization work. Last updated: 2026-07-19.
 | `9a89bd4` | **Seasonality card** — 12-bar average per calendar month over active years only (hiatus years don't drag averages); paired side-by-side with Streaks & Gaps (`statsPairRow`) |
 | `ba43b9d` | **Hilliness card** — stateless monthly elevation÷distance line (ft/mi or m/km), gaps break the line, isolated months as dots; half-rail width to pair with Average Speed |
 | `9efe4d4` | **Average Speed card** — stateless monthly distance÷moving-time line (mph or km/h), paired side-by-side with Hilliness (`ratioPairRow`) |
+| `ea3746b` | **Per-activity cards** — pipeline adds `distance`/`moving_time`/`elevation_gain` to `activities[]`; Ride Records + Distance Distribution pair and Distance vs Elevation scatter; rows hide on payloads without the fields |
 
 Key code locations in `site/app.js`:
 
@@ -114,3 +115,6 @@ Conventions established:
   (11 contract tests, harness 15/15), and committed after dashboard review.
   Client-side backlog exhausted; remaining item is the per-activity fields
   pipeline change enabling single-ride records, histogram, and scatter.
+- 2026-07-19 (later): Per-activity fields + three cards (`ea3746b`); roadmap
+  complete apart from rejected items. QoL round started: metric default,
+  year-selector behavior, card layout reorganization.
