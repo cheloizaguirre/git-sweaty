@@ -19,6 +19,7 @@ Status record for the aggregate-visualization work. Last updated: 2026-07-19.
 | `30d4f2c` | **Records card** — best day/week/month per metric (stateless) |
 | `26333b9` | **Training Load card** — rolling 7-day total + 28-day avg (÷4) lines on a continuous epoch-day timeline, full-width row below Records |
 | `be594a3` | **Streaks & Gaps card** — longest/current active-week streak (grace for in-progress week), longest/current break in days; stateless, reuses Records styles |
+| `9a89bd4` | **Seasonality card** — 12-bar average per calendar month over active years only (hiatus years don't drag averages); paired side-by-side with Streaks & Gaps (`statsPairRow`) |
 
 Key code locations in `site/app.js`:
 
@@ -74,13 +75,12 @@ Conventions established:
 
 ## Remaining backlog (from the original plan, in suggested order)
 
-1. **Seasonality profile** — average volume per calendar month across years.
-2. **Hilliness trend** — elevation gain per km by month.
-3. **Average speed trend** — distance ÷ moving time per week/month.
-4. **Indoor/outdoor share** — Ride vs VirtualRide share per month
+1. **Hilliness trend** — elevation gain per km by month.
+2. **Average speed trend** — distance ÷ moving time per week/month.
+3. **Indoor/outdoor share** — Ride vs VirtualRide share per month
    (stacked area). REJECTED: user is not interested in this card
-5. **Start-hour × weekday punch card** — refinement of the hour matrix. REJECTED: user is not interested in this card
-6. *(Requires small pipeline change — still no workflow/data changes:)* add
+4. **Start-hour × weekday punch card** — refinement of the hour matrix. REJECTED: user is not interested in this card
+5. *(Requires small pipeline change — still no workflow/data changes:)* add
    `distance`/`moving_time`/`elevation_gain` to `activities[]` items in
    `generate_heatmaps.py::_load_activities` to enable per-activity records
    (longest single ride, distribution histogram) and a distance-vs-elevation
@@ -102,3 +102,7 @@ Conventions established:
   local dev serves `app.js?v=__APP_VERSION__` (placeholder only replaced at
   deploy), so browsers can cache a stale app.js — hard refresh when a new
   card "doesn't show". Next up: Seasonality profile.
+- 2026-07-19 (later): Seasonality card (`9a89bd4`) implemented with
+  active-month-only averaging (Marcelo's pick), tested (13 contract tests,
+  harness 19/19), and committed after dashboard review. Next up: Hilliness
+  trend, sized half-rail so the Average Speed trend can pair beside it.
