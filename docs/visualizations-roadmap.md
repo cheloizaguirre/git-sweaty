@@ -62,6 +62,11 @@ Conventions established:
   `max(summary grid, 1250px)`; progress SVG width is capped by a contract test
   so the pair always fits side by side (weekly Trends ≈ 640px + progress card
   ≈ 590px + 14px gap ≤ 1250px).
+- Uniform layout (`ba45839`): single-card rows span the rail; pair rows split
+  it 50/50 (`flex: 1 1 320px`, wraps when narrow) with equal heights; SVG
+  charts (`.progress-svg`) scale via viewBox to fill their card. The SVG
+  width caps above remain as design minimums. Trends bars are DOM-based and
+  don't scale.
 
 ## Verification workflow
 
@@ -118,3 +123,9 @@ Conventions established:
 - 2026-07-19 (later): Per-activity fields + three cards (`ea3746b`); roadmap
   complete apart from rejected items. QoL round started: metric default,
   year-selector behavior, card layout reorganization.
+- 2026-07-19 (later): QoL round committed (`ba45839`): metric (km/m) default
+  via config.yaml, top-row chip selection reworked (All resets; first value
+  click starts fresh, deliberate product change in filter-behavior-lock),
+  Best Activity group merged into Records, Distribution+Scatter paired, and
+  uniform full/half-rail card widths with scaling SVGs. All work through
+  here reviewed by Marcelo in the dev dashboard; still nothing pushed.
