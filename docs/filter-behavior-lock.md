@@ -213,3 +213,42 @@ not participate in `Reset All`.
    filter changes.
 2. Row tooltips show the period, activity total with per-type breakdown, and
    non-zero metric totals via the shared tooltip system.
+
+## Training Load Card
+
+The "Training Load" labeled card row renders as its own full-width row below
+"Records" in both the combined-types branch and the single-type branch of
+`update()`.
+
+### Chip behavior (`buildLoadCard`)
+
+1. Metric chips (`Activities | Distance | Time | Elevation`) are single-select
+   with always exactly one active; clicking the active chip is a no-op.
+   Unavailable metrics follow the shared unavailable-chip treatment.
+2. Default metric is `Distance`, falling back to the first available metric
+   without overwriting the stored selection.
+3. Chip clicks rerender only the load chart, never the full dashboard.
+4. The selection persists across type/year filter changes and unit toggles via
+   `selectedLoadMetricKey`; only chip clicks (`source === "card"`) update
+   stored state. `Reset All` restores the default and non-default state
+   enables the button (`isDefaultLoadState`).
+
+### Chart behavior
+
+1. `computeRollingLoadSeries` builds a continuous daily timeline from the
+   first to the last active date in the selection (epoch-day based, so it
+   spans year boundaries) and computes sliding 7-day and 28-day rolling
+   totals; days without activity contribute zero, so gaps decay the load.
+2. Two lines share one scale: the 7-day rolling total, and the 28-day rolling
+   total divided by 4 (a per-7-day average, an acute-vs-chronic load proxy).
+   The 7-day line renders heavier and on top; colors come from the fallback
+   palette and are echoed in the legend.
+3. X gridlines/labels adapt to the span: month starts with sparse labels
+   (year shown at each January) for spans ≤ 430 days, year boundaries only
+   for longer spans. Y ticks sit at 25/50/75/100% of the maximum plotted
+   value in the active units.
+4. Weekly hover strips show "Through <date>" with the 7-day total and the
+   28-day total (plus its weekly average) via the shared tooltip system.
+5. The chart reuses the shared progress chart SVG styles (gridlines, axis
+   labels, hover strips, legend); only the line and card container styles are
+   load-specific.

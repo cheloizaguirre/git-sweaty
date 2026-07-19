@@ -2467,6 +2467,23 @@ const PROGRESS_MONTH_START_DAYS = Object.freeze([
 ]);
 const PROGRESS_MONTH_DISPLAY_LABELS = TRENDS_MONTHLY_DISPLAY_LABELS;
 const PROGRESS_TOOLTIP_STRIP_DAYS = 7;
+const LOAD_DEFAULT_METRIC_KEY = "distance";
+const LOAD_SHORT_WINDOW_DAYS = 7;
+const LOAD_LONG_WINDOW_DAYS = 28;
+const LOAD_TOOLTIP_STRIP_DAYS = 7;
+// The Training Load card renders as its own full-width row, so the SVG can
+// use most of --dashboard-content-rail-width (1250px) minus ~66px card chrome.
+const LOAD_CHART_LAYOUT = Object.freeze({
+  innerWidth: 1080,
+  innerHeight: 170,
+  left: 56,
+  right: 12,
+  top: 10,
+  bottom: 20,
+});
+// Show month gridlines/labels only when the selected span is short enough
+// for them to be legible; beyond this we fall back to year boundaries.
+const LOAD_MONTH_LABEL_MAX_DAYS = 430;
 const SVG_NS = "http://www.w3.org/2000/svg";
 const METRIC_LABEL_BY_KEY = Object.freeze({
   [ACTIVE_DAYS_METRIC_KEY]: "Active Days",
@@ -4123,6 +4140,74 @@ function progressDayLabel(day) {
   return `${MONTHS[reference.getUTCMonth()]} ${reference.getUTCDate()}`;
 }
 
+function loadEpochDay(dateStr) {
+  const normalized = String(dateStr || "");
+  const year = Number(normalized.slice(0, 4));
+  const month = Number(normalized.slice(5, 7));
+  const day = Number(normalized.slice(8, 10));
+  if (!year || !month || !day || month < 1 || month > 12 || day < 1 || day > 31) {
+    return null;
+  }
+  const ms = Date.UTC(year, month - 1, day);
+  if (!Number.isFinite(ms)) return null;
+  return Math.round(ms / MS_PER_DAY);
+}
+
+function loadDateFromEpochDay(epochDay) {
+  return new Date(epochDay * MS_PER_DAY);
+}
+
+function computeRollingLoadSeries(aggregates, types, years, metricKey, options = {}) {
+  const shortWindow = Number(options.shortWindow) > 0
+    ? Number(options.shortWindow)
+    : LOAD_SHORT_WINDOW_DAYS;
+  const longWindow = Number(options.longWindow) > 0
+    ? Number(options.longWindow)
+    : LOAD_LONG_WINDOW_DAYS;
+  const typeList = Array.isArray(types) ? types : [];
+  const yearList = Array.isArray(years) ? years : [];
+
+  const totalsByDay = new Map();
+  yearList.forEach((year) => {
+    const yearData = aggregates?.[String(year)] || {};
+    typeList.forEach((type) => {
+      Object.entries(yearData?.[type] || {}).forEach(([dateStr, entry]) => {
+        const value = progressMetricEntryValue(entry, metricKey);
+        if (value <= 0) return;
+        const epochDay = loadEpochDay(dateStr);
+        if (epochDay === null) return;
+        totalsByDay.set(epochDay, (totalsByDay.get(epochDay) || 0) + value);
+      });
+    });
+  });
+  if (!totalsByDay.size) return null;
+
+  let firstDay = Infinity;
+  let lastDay = -Infinity;
+  totalsByDay.forEach((value, day) => {
+    if (day < firstDay) firstDay = day;
+    if (day > lastDay) lastDay = day;
+  });
+
+  // Sliding-window rolling totals over a continuous day range; days with no
+  // activity contribute zero, so gaps decay the load naturally.
+  const points = [];
+  let shortSum = 0;
+  let longSum = 0;
+  for (let day = firstDay; day <= lastDay; day += 1) {
+    shortSum += totalsByDay.get(day) || 0;
+    shortSum -= totalsByDay.get(day - shortWindow) || 0;
+    longSum += totalsByDay.get(day) || 0;
+    longSum -= totalsByDay.get(day - longWindow) || 0;
+    points.push({
+      day,
+      short: Math.max(0, shortSum),
+      long: Math.max(0, longSum),
+    });
+  }
+  return { firstDay, lastDay, shortWindow, longWindow, points };
+}
+
 function getFilteredActivities(payload, types, years) {
   const activities = payload.activities || [];
   if (!activities.length) return [];
@@ -5366,6 +5451,296 @@ function buildProgressCard(payload, types, years, options = {}) {
   return card;
 }
 
+function buildLoadCard(payload, types, years, options = {}) {
+  const units = normalizeUnits(options.units || payload.units || DEFAULT_UNITS);
+  const onStateChange = typeof options.onStateChange === "function"
+    ? options.onStateChange
+    : null;
+  const typeList = Array.isArray(types) ? types : [];
+  const yearsList = Array.isArray(years) ? years : [];
+  const aggregates = payload.aggregates || {};
+
+  const yearlyBuckets = bucketAggregatesByPeriod(aggregates, typeList, yearsList, "yearly", "sunday");
+  const totals = yearlyBuckets.reduce((acc, bucket) => {
+    acc.count += bucket.count;
+    acc.distance += bucket.distance;
+    acc.moving_time += bucket.moving_time;
+    acc.elevation_gain += bucket.elevation_gain;
+    return acc;
+  }, { count: 0, distance: 0, moving_time: 0, elevation_gain: 0 });
+
+  const metricItems = TRENDS_METRIC_ITEMS.map((item) => ({
+    key: item.key,
+    label: item.label,
+    filterable: Number(totals[item.key] || 0) > 0,
+  }));
+  const filterableMetricKeys = getFilterableKeys(metricItems);
+
+  let activeMetricKey = null;
+  const reportState = (source) => {
+    if (!onStateChange) return;
+    onStateChange({
+      metricKey: activeMetricKey,
+      filterableMetricKeys: filterableMetricKeys.slice(),
+      source,
+    });
+  };
+
+  if (totals.count <= 0 || !yearsList.length) {
+    reportState("init");
+    return buildEmptySelectionCard();
+  }
+  const requestedMetricKey = typeof options.initialMetricKey === "string"
+    ? options.initialMetricKey
+    : null;
+  if (requestedMetricKey && filterableMetricKeys.includes(requestedMetricKey)) {
+    activeMetricKey = requestedMetricKey;
+  } else if (filterableMetricKeys.includes(LOAD_DEFAULT_METRIC_KEY)) {
+    activeMetricKey = LOAD_DEFAULT_METRIC_KEY;
+  } else {
+    activeMetricKey = filterableMetricKeys[0] || "count";
+  }
+
+  const card = document.createElement("div");
+  card.className = "card load-card";
+
+  const body = document.createElement("div");
+  body.className = "load-body";
+
+  const controls = document.createElement("div");
+  controls.className = "trends-controls";
+  const metricChipRow = document.createElement("div");
+  metricChipRow.className = "trends-chip-group load-metric-chips";
+
+  const chartArea = document.createElement("div");
+  chartArea.className = "load-chart-area";
+  const legend = document.createElement("div");
+  legend.className = "progress-legend load-legend";
+
+  const metricButtons = new Map();
+  const renderMetricButtonState = () => renderSingleSelectButtonState(
+    metricItems,
+    metricButtons,
+    activeMetricKey,
+  );
+
+  const svgAttr = (el, attrs) => {
+    Object.entries(attrs).forEach(([name, value]) => {
+      el.setAttribute(name, String(value));
+    });
+    return el;
+  };
+
+  const loadDayTooltipLabel = (epochDay) => {
+    const date = loadDateFromEpochDay(epochDay);
+    return `${MONTHS[date.getUTCMonth()]} ${date.getUTCDate()}, ${date.getUTCFullYear()}`;
+  };
+
+  const renderLoadChart = () => {
+    chartArea.innerHTML = "";
+    legend.innerHTML = "";
+    const layout = LOAD_CHART_LAYOUT;
+    const width = layout.left + layout.innerWidth + layout.right;
+    const height = layout.top + layout.innerHeight + layout.bottom;
+
+    const series = computeRollingLoadSeries(aggregates, typeList, yearsList, activeMetricKey);
+    const metricLabel = TRENDS_METRIC_ITEMS.find((item) => item.key === activeMetricKey)?.label
+      || "Metric";
+
+    const svg = document.createElementNS(SVG_NS, "svg");
+    svgAttr(svg, {
+      viewBox: `0 0 ${width} ${height}`,
+      width,
+      height,
+      role: "img",
+      "aria-label": `Rolling ${metricLabel} training load`,
+    });
+    svg.classList.add("progress-svg", "load-svg");
+
+    if (!series) {
+      chartArea.appendChild(svg);
+      return;
+    }
+
+    const { firstDay, lastDay, longWindow, shortWindow, points } = series;
+    const totalDays = lastDay - firstDay + 1;
+    const windowRatio = longWindow / shortWindow;
+    const xForDay = (day) => layout.left
+      + ((Math.max(firstDay, Math.min(lastDay, day)) - firstDay)
+        / Math.max(1, lastDay - firstDay))
+      * layout.innerWidth;
+    const yMax = points.reduce(
+      (acc, point) => Math.max(acc, point.short, point.long / windowRatio),
+      0,
+    );
+    const yForValue = (value) => layout.top + layout.innerHeight
+      - (yMax > 0 ? (value / yMax) * layout.innerHeight : 0);
+
+    // X gridlines: month starts (sparse labels) for short spans, with the
+    // year shown at each January; year boundaries only for long spans.
+    const showMonths = totalDays <= LOAD_MONTH_LABEL_MAX_DAYS;
+    const firstDate = loadDateFromEpochDay(firstDay);
+    const cursor = new Date(Date.UTC(
+      firstDate.getUTCFullYear(),
+      firstDate.getUTCMonth(),
+      1,
+    ));
+    while (true) {
+      const gridEpochDay = Math.round(cursor.getTime() / MS_PER_DAY);
+      if (gridEpochDay > lastDay) break;
+      const monthIndex = cursor.getUTCMonth();
+      const isYearBoundary = monthIndex === 0;
+      if (gridEpochDay >= firstDay && (showMonths || isYearBoundary)) {
+        const x = xForDay(gridEpochDay);
+        const line = document.createElementNS(SVG_NS, "line");
+        svgAttr(line, {
+          x1: x, y1: layout.top, x2: x, y2: layout.top + layout.innerHeight,
+          class: "progress-gridline",
+        });
+        svg.appendChild(line);
+        const labelText = isYearBoundary
+          ? String(cursor.getUTCFullYear())
+          : (showMonths ? PROGRESS_MONTH_DISPLAY_LABELS[monthIndex] : "");
+        if (labelText) {
+          const label = document.createElementNS(SVG_NS, "text");
+          svgAttr(label, {
+            x, y: layout.top + layout.innerHeight + 14, class: "progress-axis-label",
+          });
+          label.textContent = labelText;
+          svg.appendChild(label);
+        }
+      }
+      cursor.setUTCMonth(cursor.getUTCMonth() + 1);
+    }
+
+    // Y gridlines + tick labels at 25/50/75/100%.
+    [0.25, 0.5, 0.75, 1].forEach((fraction) => {
+      const value = yMax * fraction;
+      const y = yForValue(value);
+      const line = document.createElementNS(SVG_NS, "line");
+      svgAttr(line, {
+        x1: layout.left, y1: y, x2: layout.left + layout.innerWidth, y2: y,
+        class: "progress-gridline",
+      });
+      svg.appendChild(line);
+      const label = document.createElementNS(SVG_NS, "text");
+      svgAttr(label, {
+        x: layout.left - 6, y: y + 3,
+        class: "progress-axis-label progress-axis-label-y",
+      });
+      label.textContent = formatProgressTick(activeMetricKey, value, units);
+      svg.appendChild(label);
+    });
+
+    // Long window first so the short (highlighted) line draws on top. The
+    // long line is scaled to a per-shortWindow average so both share a scale.
+    const lineSpecs = [
+      {
+        key: "long",
+        className: "load-line load-line-long",
+        color: progressYearColor(2),
+        valueFor: (point) => point.long / windowRatio,
+        label: `${longWindow}-day rolling avg (per ${shortWindow} days)`,
+      },
+      {
+        key: "short",
+        className: "load-line load-line-short",
+        color: progressYearColor(0),
+        valueFor: (point) => point.short,
+        label: `${shortWindow}-day rolling total`,
+      },
+    ];
+    lineSpecs.forEach((spec) => {
+      const linePoints = points
+        .map((point) => `${xForDay(point.day).toFixed(1)},${yForValue(spec.valueFor(point)).toFixed(1)}`);
+      const polyline = document.createElementNS(SVG_NS, "polyline");
+      svgAttr(polyline, {
+        points: linePoints.join(" "),
+        class: spec.className,
+        stroke: spec.color,
+      });
+      svg.appendChild(polyline);
+    });
+
+    // Weekly hover strips with both window totals.
+    const stripCount = Math.ceil(totalDays / LOAD_TOOLTIP_STRIP_DAYS);
+    for (let strip = 0; strip < stripCount; strip += 1) {
+      const startDay = firstDay + strip * LOAD_TOOLTIP_STRIP_DAYS;
+      const endDay = Math.min(lastDay, startDay + LOAD_TOOLTIP_STRIP_DAYS - 1);
+      const point = points[endDay - firstDay];
+      if (!point) continue;
+      const lines = [
+        `Through ${loadDayTooltipLabel(endDay)}`,
+        `${shortWindow}-day total: ${formatTrendsMetricValue(activeMetricKey, point.short, units)}`,
+        `${longWindow}-day total: ${formatTrendsMetricValue(activeMetricKey, point.long, units)}`
+          + ` (${formatTrendsMetricValue(activeMetricKey, point.long / windowRatio, units)}/wk avg)`,
+      ];
+      const rect = document.createElementNS(SVG_NS, "rect");
+      svgAttr(rect, {
+        x: xForDay(startDay).toFixed(1),
+        y: layout.top,
+        width: Math.max(1, xForDay(endDay + 1) - xForDay(startDay)).toFixed(1),
+        height: layout.innerHeight,
+        class: "progress-hover-strip",
+      });
+      attachTooltip(rect, lines.join("\n"));
+      svg.appendChild(rect);
+    }
+
+    chartArea.appendChild(svg);
+
+    lineSpecs.slice().reverse().forEach((spec) => {
+      const item = document.createElement("div");
+      item.className = "progress-legend-item";
+      const dot = document.createElement("span");
+      dot.className = "progress-legend-dot";
+      dot.style.background = spec.color;
+      const text = document.createElement("span");
+      text.textContent = spec.label;
+      item.appendChild(dot);
+      item.appendChild(text);
+      legend.appendChild(item);
+    });
+  };
+
+  metricItems.forEach((item) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "more-stats-metric-chip trends-chip";
+    chip.textContent = item.label;
+    chip.setAttribute("aria-disabled", item.filterable ? "false" : "true");
+    chip.setAttribute("aria-pressed", "false");
+    if (item.filterable) {
+      chip.addEventListener("click", () => {
+        if (activeMetricKey === item.key) return;
+        activeMetricKey = item.key;
+        renderMetricButtonState();
+        renderLoadChart();
+        reportState("card");
+      });
+    } else {
+      const unavailableReason = getFrequencyMetricUnavailableReason(item.key, item.label);
+      chip.classList.add("is-unavailable");
+      chip.title = unavailableReason;
+      chip.setAttribute("aria-label", `${item.label} unavailable. ${unavailableReason}`);
+      attachTooltip(chip, unavailableReason);
+    }
+    metricButtons.set(item.key, chip);
+    metricChipRow.appendChild(chip);
+  });
+
+  renderMetricButtonState();
+  renderLoadChart();
+  reportState("init");
+
+  controls.appendChild(metricChipRow);
+  body.appendChild(controls);
+  body.appendChild(chartArea);
+  body.appendChild(legend);
+  card.appendChild(body);
+  return card;
+}
+
 function buildRecordsCard(payload, types, years, options = {}) {
   const units = normalizeUnits(options.units || payload.units || DEFAULT_UNITS);
   const weekStart = normalizeWeekStart(options.weekStart);
@@ -5604,6 +5979,7 @@ async function init() {
   let selectedTrendsGranularity = TRENDS_DEFAULT_GRANULARITY;
   let selectedTrendsMetricKey = TRENDS_DEFAULT_METRIC_KEY;
   let selectedProgressMetricKey = PROGRESS_DEFAULT_METRIC_KEY;
+  let selectedLoadMetricKey = LOAD_DEFAULT_METRIC_KEY;
 
   const onProgressStateChange = ({ metricKey, source }) => {
     if (source !== "card") return;
@@ -5615,6 +5991,18 @@ async function init() {
 
   function isDefaultProgressState() {
     return selectedProgressMetricKey === PROGRESS_DEFAULT_METRIC_KEY;
+  }
+
+  const onLoadStateChange = ({ metricKey, source }) => {
+    if (source !== "card") return;
+    selectedLoadMetricKey = TRENDS_METRIC_ITEMS.some((item) => item.key === metricKey)
+      ? metricKey
+      : LOAD_DEFAULT_METRIC_KEY;
+    syncResetAllButtonState();
+  };
+
+  function isDefaultLoadState() {
+    return selectedLoadMetricKey === LOAD_DEFAULT_METRIC_KEY;
   }
 
   const onTrendsStateChange = ({ granularity, metricKey, source }) => {
@@ -5651,7 +6039,8 @@ async function init() {
       && !selectedFrequencyFactKey
       && !hasAnyFrequencyMetricSelection()
       && isDefaultTrendsState()
-      && isDefaultProgressState();
+      && isDefaultProgressState()
+      && isDefaultLoadState();
   }
 
   function syncResetAllButtonState() {
@@ -6085,6 +6474,19 @@ async function init() {
               "records",
             ),
           );
+          const loadCard = buildLoadCard(payload, types, cardYears, {
+            units: currentUnits,
+            initialMetricKey: selectedLoadMetricKey,
+            onStateChange: onLoadStateChange,
+          });
+          setCardScrollKey(loadCard, `${combinedSelectionKey}:load`);
+          list.appendChild(
+            buildLabeledCardRow(
+              "Training Load",
+              loadCard,
+              "load",
+            ),
+          );
         }
         cardYears.forEach((year) => {
           const yearData = payload.aggregates?.[String(year)] || {};
@@ -6200,6 +6602,19 @@ async function init() {
                 "Records",
                 recordsCard,
                 "records",
+              ),
+            );
+            const loadCard = buildLoadCard(payload, [type], cardYears, {
+              units: currentUnits,
+              initialMetricKey: selectedLoadMetricKey,
+              onStateChange: onLoadStateChange,
+            });
+            setCardScrollKey(loadCard, `${typeCardKey}:load`);
+            list.appendChild(
+              buildLabeledCardRow(
+                "Training Load",
+                loadCard,
+                "load",
               ),
             );
           }
@@ -6411,6 +6826,7 @@ async function init() {
       selectedTrendsGranularity = TRENDS_DEFAULT_GRANULARITY;
       selectedTrendsMetricKey = TRENDS_DEFAULT_METRIC_KEY;
       selectedProgressMetricKey = PROGRESS_DEFAULT_METRIC_KEY;
+      selectedLoadMetricKey = LOAD_DEFAULT_METRIC_KEY;
       hoverClearedSummaryType = null;
       hoverClearedSummaryYearMetricKey = null;
       update({

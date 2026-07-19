@@ -1177,6 +1177,48 @@
         max-width: 100%;
       }
 
+      .labeled-card-row-load > .card {
+        width: max-content;
+        max-width: 100%;
+      }
+
+      .load-card {
+        display: grid;
+        grid-template-rows: auto auto;
+        row-gap: var(--labeled-card-title-gap);
+      }
+
+      .load-body {
+        display: grid;
+        row-gap: var(--space-5);
+        width: max-content;
+        max-width: 100%;
+      }
+
+      .load-chart-area {
+        border-radius: 6px;
+        background: rgba(15, 23, 42, 0.8);
+        padding: var(--space-3);
+        width: max-content;
+        max-width: 100%;
+      }
+
+      .load-line {
+        fill: none;
+        stroke-linejoin: round;
+        stroke-linecap: round;
+      }
+
+      .load-line-long {
+        stroke-width: 1.5;
+        opacity: 0.75;
+      }
+
+      .load-line-short {
+        stroke-width: 2;
+        opacity: 1;
+      }
+
       .records-card {
         display: grid;
         grid-template-rows: auto auto;
