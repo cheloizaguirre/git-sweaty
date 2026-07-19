@@ -1266,6 +1266,40 @@
         text-anchor: middle;
       }
 
+      .labeled-card-row-speed > .card {
+        width: max-content;
+        max-width: 100%;
+      }
+
+      .speed-card {
+        display: grid;
+        grid-template-rows: auto auto;
+        row-gap: var(--labeled-card-title-gap);
+      }
+
+      .speed-body {
+        display: grid;
+        row-gap: var(--space-5);
+        width: max-content;
+        max-width: 100%;
+      }
+
+      .speed-chart-area {
+        border-radius: 6px;
+        background: rgba(15, 23, 42, 0.8);
+        padding: var(--space-3);
+        width: max-content;
+        max-width: 100%;
+      }
+
+      .speed-line {
+        fill: none;
+        stroke-width: 1.5;
+        stroke-linejoin: round;
+        stroke-linecap: round;
+        opacity: 0.9;
+      }
+
       .load-card {
         display: grid;
         grid-template-rows: auto auto;

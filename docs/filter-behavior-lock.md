@@ -289,11 +289,12 @@ of `update()`.
 
 ## Hilliness Card
 
-The "Hilliness" labeled card row renders below the Seasonality/Streaks pair
-in both the combined-types branch and the single-type branch of `update()`.
-The card is stateless: no chips, no persisted state, no `Reset All`
-participation. The SVG is capped at the progress-card width (≤ 520px) so the
-upcoming Average Speed trend card can pair beside it.
+The "Hilliness" labeled card row renders side by side with "Average Speed"
+in a shared `.labeled-card-row-pair` container (`ratioPairRow`) below the
+Seasonality/Streaks pair in both the combined-types branch and the
+single-type branch of `update()`. The card is stateless: no chips, no
+persisted state, no `Reset All` participation. The SVG is capped at the
+progress-card width (≤ 520px) so the pair fits the rail.
 
 ### Chart behavior
 
@@ -314,6 +315,24 @@ upcoming Average Speed trend card can pair beside it.
    dashboard rerender.
 6. The chart reuses the shared progress chart SVG styles; only the line/dot
    and card container styles are hilliness-specific.
+
+## Average Speed Card
+
+The "Average Speed" labeled card row renders paired with "Hilliness"
+(`ratioPairRow`, see above) in both render branches. Stateless, same rules
+as Hilliness.
+
+### Chart behavior
+
+1. `computeSpeedSeries` sums distance and moving time per (year, calendar
+   month) on the continuous month index, keeping only months with an
+   activity count, distance, and moving time > 0; each point's speed is
+   distance ÷ moving time (m/s).
+2. Values display per the active unit system via `formatSpeedValue` (one
+   decimal): km/h (× 3.6) or mph (× 3600 ÷ 1609.344), including Y-axis
+   ticks at 25/50/75/100% of the maximum.
+3. Line segmentation, gap handling, adaptive X labels, and per-month hover
+   strips (month, speed, distance, time) all mirror the Hilliness card.
 
 ## Streaks & Gaps Card
 

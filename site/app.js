@@ -2496,6 +2496,15 @@ const HILLINESS_CHART_LAYOUT = Object.freeze({
 });
 // Show per-month labels only for short spans; year boundaries otherwise.
 const HILLINESS_MONTH_LABEL_MAX_MONTHS = 15;
+// Mirrors HILLINESS_CHART_LAYOUT so the two cards pair inside the rail.
+const SPEED_CHART_LAYOUT = Object.freeze({
+  innerWidth: 440,
+  innerHeight: 150,
+  left: 56,
+  right: 12,
+  top: 10,
+  bottom: 20,
+});
 const SEASONALITY_DEFAULT_METRIC_KEY = "distance";
 // 12 bars; svg width = left + 12*barWidth + 11*barGap + right = 466px, so
 // the Seasonality card pairs with Streaks & Gaps inside the 1250px rail.
@@ -4329,6 +4338,58 @@ function formatHillinessValue(ratio, units) {
     return `${Math.round(ratio * 1000).toLocaleString()} m/km`;
   }
   return `${Math.round(ratio * 5280).toLocaleString()} ft/mi`;
+}
+
+function computeSpeedSeries(aggregates, types, years) {
+  const typeList = Array.isArray(types) ? types : [];
+  const yearList = Array.isArray(years) ? years : [];
+
+  // One point per (year, calendar month) with riding time: average moving
+  // speed in m/s, on a continuous month index (year * 12 + month).
+  const byMonthKey = new Map();
+  yearList.forEach((year) => {
+    const yearData = aggregates?.[String(year)] || {};
+    typeList.forEach((type) => {
+      Object.entries(yearData?.[type] || {}).forEach(([dateStr, entry]) => {
+        const monthIndex = Number(String(dateStr).slice(5, 7)) - 1;
+        if (!Number.isFinite(monthIndex) || monthIndex < 0 || monthIndex > 11) return;
+        const monthKey = Number(year) * 12 + monthIndex;
+        let point = byMonthKey.get(monthKey);
+        if (!point) {
+          point = {
+            monthKey,
+            year: Number(year),
+            monthIndex,
+            count: 0,
+            distance: 0,
+            movingTime: 0,
+          };
+          byMonthKey.set(monthKey, point);
+        }
+        point.count += Number(entry?.count || 0);
+        point.distance += Math.max(0, Number(entry?.distance || 0));
+        point.movingTime += Math.max(0, Number(entry?.moving_time || 0));
+      });
+    });
+  });
+
+  const points = Array.from(byMonthKey.values())
+    .filter((point) => point.count > 0 && point.movingTime > 0 && point.distance > 0)
+    .sort((a, b) => a.monthKey - b.monthKey);
+  points.forEach((point) => {
+    point.speed = point.distance / point.movingTime;
+  });
+  return points;
+}
+
+function formatSpeedValue(metersPerSecond, units) {
+  // mph = m/s * 2.236936..., km/h = m/s * 3.6.
+  if (units?.distance === "km") {
+    const value = metersPerSecond * 3.6;
+    return `${value.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} km/h`;
+  }
+  const value = (metersPerSecond * 3600) / 1609.344;
+  return `${value.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} mph`;
 }
 
 function streakWeekStartEpochDay(epochDay, weekStart) {
@@ -6212,6 +6273,162 @@ function buildHillinessCard(payload, types, years, options = {}) {
   return card;
 }
 
+function buildSpeedCard(payload, types, years, options = {}) {
+  const units = normalizeUnits(options.units || payload.units || DEFAULT_UNITS);
+  const typeList = Array.isArray(types) ? types : [];
+  const yearsList = Array.isArray(years) ? years : [];
+  const aggregates = payload.aggregates || {};
+
+  const points = computeSpeedSeries(aggregates, typeList, yearsList);
+  if (!points.length) {
+    return buildEmptySelectionCard();
+  }
+
+  const card = document.createElement("div");
+  card.className = "card speed-card";
+  const body = document.createElement("div");
+  body.className = "speed-body";
+  const chartArea = document.createElement("div");
+  chartArea.className = "speed-chart-area";
+
+  const svgAttr = (el, attrs) => {
+    Object.entries(attrs).forEach(([name, value]) => {
+      el.setAttribute(name, String(value));
+    });
+    return el;
+  };
+
+  const layout = SPEED_CHART_LAYOUT;
+  const width = layout.left + layout.innerWidth + layout.right;
+  const height = layout.top + layout.innerHeight + layout.bottom;
+  const firstKey = points[0].monthKey;
+  const lastKey = points[points.length - 1].monthKey;
+  const spanMonths = lastKey - firstKey + 1;
+  const slotWidth = layout.innerWidth / Math.max(1, spanMonths);
+  const xForKey = (monthKey) => layout.left
+    + ((monthKey - firstKey) + 0.5) * slotWidth;
+  const yMax = points.reduce((acc, point) => Math.max(acc, point.speed), 0);
+  const yForValue = (value) => layout.top + layout.innerHeight
+    - (yMax > 0 ? (value / yMax) * layout.innerHeight : 0);
+
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svgAttr(svg, {
+    viewBox: `0 0 ${width} ${height}`,
+    width,
+    height,
+    role: "img",
+    "aria-label": "Average moving speed by month",
+  });
+  svg.classList.add("progress-svg", "speed-svg");
+
+  // X gridlines: month slots for short spans (year at January), Januaries
+  // only for long spans.
+  const showMonths = spanMonths <= HILLINESS_MONTH_LABEL_MAX_MONTHS;
+  for (let monthKey = firstKey; monthKey <= lastKey; monthKey += 1) {
+    const monthIndex = monthKey % 12;
+    const isYearBoundary = monthIndex === 0;
+    if (!showMonths && !isYearBoundary) continue;
+    const x = xForKey(monthKey);
+    const line = document.createElementNS(SVG_NS, "line");
+    svgAttr(line, {
+      x1: x, y1: layout.top, x2: x, y2: layout.top + layout.innerHeight,
+      class: "progress-gridline",
+    });
+    svg.appendChild(line);
+    const labelText = isYearBoundary
+      ? String(Math.floor(monthKey / 12))
+      : (showMonths ? MONTHS[monthIndex] : "");
+    if (labelText) {
+      const label = document.createElementNS(SVG_NS, "text");
+      svgAttr(label, {
+        x, y: layout.top + layout.innerHeight + 14,
+        class: "progress-axis-label hilliness-axis-label",
+      });
+      label.textContent = labelText;
+      svg.appendChild(label);
+    }
+  }
+
+  // Y gridlines + tick labels at 25/50/75/100%.
+  [0.25, 0.5, 0.75, 1].forEach((fraction) => {
+    const value = yMax * fraction;
+    const y = yForValue(value);
+    const line = document.createElementNS(SVG_NS, "line");
+    svgAttr(line, {
+      x1: layout.left, y1: y, x2: layout.left + layout.innerWidth, y2: y,
+      class: "progress-gridline",
+    });
+    svg.appendChild(line);
+    const label = document.createElementNS(SVG_NS, "text");
+    svgAttr(label, {
+      x: layout.left - 6, y: y + 3,
+      class: "progress-axis-label progress-axis-label-y",
+    });
+    label.textContent = formatSpeedValue(value, units);
+    svg.appendChild(label);
+  });
+
+  // Line segments over consecutive months; isolated months render a dot.
+  const color = progressYearColor(6);
+  let segment = [];
+  const flushSegment = () => {
+    if (segment.length >= 2) {
+      const polyline = document.createElementNS(SVG_NS, "polyline");
+      svgAttr(polyline, {
+        points: segment
+          .map((point) => `${xForKey(point.monthKey).toFixed(1)},${yForValue(point.speed).toFixed(1)}`)
+          .join(" "),
+        class: "speed-line",
+        stroke: color,
+      });
+      svg.appendChild(polyline);
+    } else if (segment.length === 1) {
+      const dot = document.createElementNS(SVG_NS, "circle");
+      svgAttr(dot, {
+        cx: xForKey(segment[0].monthKey).toFixed(1),
+        cy: yForValue(segment[0].speed).toFixed(1),
+        r: 2.5,
+        fill: color,
+        class: "speed-dot",
+      });
+      svg.appendChild(dot);
+    }
+    segment = [];
+  };
+  points.forEach((point, index) => {
+    if (index > 0 && point.monthKey - points[index - 1].monthKey !== 1) {
+      flushSegment();
+    }
+    segment.push(point);
+  });
+  flushSegment();
+
+  // Per-month hover strips for active months.
+  points.forEach((point) => {
+    const lines = [
+      `${MONTHS[point.monthIndex]} ${point.year}`,
+      formatSpeedValue(point.speed, units),
+      `Distance: ${formatTrendsMetricValue("distance", point.distance, units)}`,
+      `Time: ${formatTrendsMetricValue("moving_time", point.movingTime, units)}`,
+    ];
+    const strip = document.createElementNS(SVG_NS, "rect");
+    svgAttr(strip, {
+      x: (xForKey(point.monthKey) - slotWidth / 2).toFixed(1),
+      y: layout.top,
+      width: Math.max(1, slotWidth).toFixed(1),
+      height: layout.innerHeight,
+      class: "progress-hover-strip",
+    });
+    attachTooltip(strip, lines.join("\n"));
+    svg.appendChild(strip);
+  });
+
+  chartArea.appendChild(svg);
+  body.appendChild(chartArea);
+  card.appendChild(body);
+  return card;
+}
+
 function buildSeasonalityCard(payload, types, years, options = {}) {
   const units = normalizeUnits(options.units || payload.units || DEFAULT_UNITS);
   const onStateChange = typeof options.onStateChange === "function"
@@ -7281,13 +7498,27 @@ async function init() {
             units: currentUnits,
           });
           setCardScrollKey(hillinessCard, `${combinedSelectionKey}:hilliness`);
-          list.appendChild(
+          const speedCard = buildSpeedCard(payload, types, cardYears, {
+            units: currentUnits,
+          });
+          setCardScrollKey(speedCard, `${combinedSelectionKey}:speed`);
+          const ratioPairRow = document.createElement("div");
+          ratioPairRow.className = "labeled-card-row-pair";
+          ratioPairRow.appendChild(
             buildLabeledCardRow(
               "Hilliness",
               hillinessCard,
               "hilliness",
             ),
           );
+          ratioPairRow.appendChild(
+            buildLabeledCardRow(
+              "Average Speed",
+              speedCard,
+              "speed",
+            ),
+          );
+          list.appendChild(ratioPairRow);
         }
         cardYears.forEach((year) => {
           const yearData = payload.aggregates?.[String(year)] || {};
@@ -7449,13 +7680,27 @@ async function init() {
               units: currentUnits,
             });
             setCardScrollKey(hillinessCard, `${typeCardKey}:hilliness`);
-            list.appendChild(
+            const speedCard = buildSpeedCard(payload, [type], cardYears, {
+              units: currentUnits,
+            });
+            setCardScrollKey(speedCard, `${typeCardKey}:speed`);
+            const ratioPairRow = document.createElement("div");
+            ratioPairRow.className = "labeled-card-row-pair";
+            ratioPairRow.appendChild(
               buildLabeledCardRow(
                 "Hilliness",
                 hillinessCard,
                 "hilliness",
               ),
             );
+            ratioPairRow.appendChild(
+              buildLabeledCardRow(
+                "Average Speed",
+                speedCard,
+                "speed",
+              ),
+            );
+            list.appendChild(ratioPairRow);
           }
           cardYears.forEach((year) => {
             const aggregates = payload.aggregates?.[String(year)]?.[type] || {};
