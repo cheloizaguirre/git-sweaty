@@ -21,6 +21,7 @@ Status record for the aggregate-visualization work. Last updated: 2026-07-19.
 | `be594a3` | **Streaks & Gaps card** — longest/current active-week streak (grace for in-progress week), longest/current break in days; stateless, reuses Records styles |
 | `9a89bd4` | **Seasonality card** — 12-bar average per calendar month over active years only (hiatus years don't drag averages); paired side-by-side with Streaks & Gaps (`statsPairRow`) |
 | `ba43b9d` | **Hilliness card** — stateless monthly elevation÷distance line (ft/mi or m/km), gaps break the line, isolated months as dots; half-rail width to pair with Average Speed |
+| `9efe4d4` | **Average Speed card** — stateless monthly distance÷moving-time line (mph or km/h), paired side-by-side with Hilliness (`ratioPairRow`) |
 
 Key code locations in `site/app.js`:
 
@@ -76,11 +77,10 @@ Conventions established:
 
 ## Remaining backlog (from the original plan, in suggested order)
 
-1. **Average speed trend** — distance ÷ moving time per week/month.
-2. **Indoor/outdoor share** — Ride vs VirtualRide share per month
+1. **Indoor/outdoor share** — Ride vs VirtualRide share per month
    (stacked area). REJECTED: user is not interested in this card
-3. **Start-hour × weekday punch card** — refinement of the hour matrix. REJECTED: user is not interested in this card
-4. *(Requires small pipeline change — still no workflow/data changes:)* add
+2. **Start-hour × weekday punch card** — refinement of the hour matrix. REJECTED: user is not interested in this card
+3. *(Requires small pipeline change — still no workflow/data changes:)* add
    `distance`/`moving_time`/`elevation_gain` to `activities[]` items in
    `generate_heatmaps.py::_load_activities` to enable per-activity records
    (longest single ride, distribution histogram) and a distance-vs-elevation
@@ -110,3 +110,7 @@ Conventions established:
   (11 contract tests, harness 16/16 incl. independent ratio/segment
   recomputation), and committed after dashboard review. Next up: Average
   Speed trend, paired beside Hilliness.
+- 2026-07-19 (later): Average Speed card (`9efe4d4`) implemented, tested
+  (11 contract tests, harness 15/15), and committed after dashboard review.
+  Client-side backlog exhausted; remaining item is the per-activity fields
+  pipeline change enabling single-ride records, histogram, and scatter.
