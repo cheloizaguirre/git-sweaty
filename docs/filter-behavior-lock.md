@@ -287,6 +287,34 @@ of `update()`.
 4. The chart reuses the shared progress chart SVG styles; only the bar and
    card container styles are seasonality-specific.
 
+## Hilliness Card
+
+The "Hilliness" labeled card row renders below the Seasonality/Streaks pair
+in both the combined-types branch and the single-type branch of `update()`.
+The card is stateless: no chips, no persisted state, no `Reset All`
+participation. The SVG is capped at the progress-card width (≤ 520px) so the
+upcoming Average Speed trend card can pair beside it.
+
+### Chart behavior
+
+1. `computeHillinessSeries` sums distance and elevation gain per (year,
+   calendar month) across the selected types/years on a continuous month
+   index (`year * 12 + month`), keeping only months with an activity count
+   and distance > 0; each point's ratio is elevation ÷ distance
+   (dimensionless).
+2. Values display per the active unit system via `formatHillinessValue`:
+   m/km (ratio × 1000) or ft/mi (ratio × 5280), including the Y-axis ticks
+   at 25/50/75/100% of the maximum.
+3. The line connects consecutive months only; gaps (e.g. the hiatus) break
+   the line, and isolated months render as dots.
+4. X gridlines/labels adapt to the span: every month (year shown at January)
+   for spans ≤ 15 months, Januaries only for longer spans.
+5. Per-month hover strips show the month, ratio, distance, and elevation via
+   the shared tooltip system. Unit toggles rebuild the card via the normal
+   dashboard rerender.
+6. The chart reuses the shared progress chart SVG styles; only the line/dot
+   and card container styles are hilliness-specific.
+
 ## Streaks & Gaps Card
 
 The "Streaks & Gaps" labeled card row renders paired with "Seasonality" below

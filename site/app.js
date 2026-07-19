@@ -2484,6 +2484,18 @@ const LOAD_CHART_LAYOUT = Object.freeze({
 // Show month gridlines/labels only when the selected span is short enough
 // for them to be legible; beyond this we fall back to year boundaries.
 const LOAD_MONTH_LABEL_MAX_DAYS = 430;
+// Half-rail width (svg ≤ 520px like the progress card) so the upcoming
+// Average Speed trend card can pair beside it.
+const HILLINESS_CHART_LAYOUT = Object.freeze({
+  innerWidth: 440,
+  innerHeight: 150,
+  left: 56,
+  right: 12,
+  top: 10,
+  bottom: 20,
+});
+// Show per-month labels only for short spans; year boundaries otherwise.
+const HILLINESS_MONTH_LABEL_MAX_MONTHS = 15;
 const SEASONALITY_DEFAULT_METRIC_KEY = "distance";
 // 12 bars; svg width = left + 12*barWidth + 11*barGap + right = 466px, so
 // the Seasonality card pairs with Streaks & Gaps inside the 1250px rail.
@@ -4268,6 +4280,57 @@ function computeSeasonalityProfile(aggregates, types, years, metricKey) {
   return months;
 }
 
+function computeHillinessSeries(aggregates, types, years) {
+  const typeList = Array.isArray(types) ? types : [];
+  const yearList = Array.isArray(years) ? years : [];
+
+  // One point per (year, calendar month) with riding: elevation gain per
+  // unit of distance, on a continuous month index (year * 12 + month).
+  const byMonthKey = new Map();
+  yearList.forEach((year) => {
+    const yearData = aggregates?.[String(year)] || {};
+    typeList.forEach((type) => {
+      Object.entries(yearData?.[type] || {}).forEach(([dateStr, entry]) => {
+        const monthIndex = Number(String(dateStr).slice(5, 7)) - 1;
+        if (!Number.isFinite(monthIndex) || monthIndex < 0 || monthIndex > 11) return;
+        const monthKey = Number(year) * 12 + monthIndex;
+        let point = byMonthKey.get(monthKey);
+        if (!point) {
+          point = {
+            monthKey,
+            year: Number(year),
+            monthIndex,
+            count: 0,
+            distance: 0,
+            elevationGain: 0,
+          };
+          byMonthKey.set(monthKey, point);
+        }
+        point.count += Number(entry?.count || 0);
+        point.distance += Math.max(0, Number(entry?.distance || 0));
+        point.elevationGain += Math.max(0, Number(entry?.elevation_gain || 0));
+      });
+    });
+  });
+
+  const points = Array.from(byMonthKey.values())
+    .filter((point) => point.count > 0 && point.distance > 0)
+    .sort((a, b) => a.monthKey - b.monthKey);
+  points.forEach((point) => {
+    point.ratio = point.elevationGain / point.distance;
+  });
+  return points;
+}
+
+function formatHillinessValue(ratio, units) {
+  // ratio is dimensionless (meters climbed per meter ridden);
+  // m/km = ratio * 1000, ft/mi = ratio * 5280.
+  if (units?.elevation === "m") {
+    return `${Math.round(ratio * 1000).toLocaleString()} m/km`;
+  }
+  return `${Math.round(ratio * 5280).toLocaleString()} ft/mi`;
+}
+
 function streakWeekStartEpochDay(epochDay, weekStart) {
   const weekStartIndex = weekStart === "monday" ? 1 : 0;
   // Epoch day 0 (1970-01-01) was a Thursday; 0 = Sunday in this index.
@@ -5993,6 +6056,162 @@ function buildRecordsCard(payload, types, years, options = {}) {
   return card;
 }
 
+function buildHillinessCard(payload, types, years, options = {}) {
+  const units = normalizeUnits(options.units || payload.units || DEFAULT_UNITS);
+  const typeList = Array.isArray(types) ? types : [];
+  const yearsList = Array.isArray(years) ? years : [];
+  const aggregates = payload.aggregates || {};
+
+  const points = computeHillinessSeries(aggregates, typeList, yearsList);
+  if (!points.length) {
+    return buildEmptySelectionCard();
+  }
+
+  const card = document.createElement("div");
+  card.className = "card hilliness-card";
+  const body = document.createElement("div");
+  body.className = "hilliness-body";
+  const chartArea = document.createElement("div");
+  chartArea.className = "hilliness-chart-area";
+
+  const svgAttr = (el, attrs) => {
+    Object.entries(attrs).forEach(([name, value]) => {
+      el.setAttribute(name, String(value));
+    });
+    return el;
+  };
+
+  const layout = HILLINESS_CHART_LAYOUT;
+  const width = layout.left + layout.innerWidth + layout.right;
+  const height = layout.top + layout.innerHeight + layout.bottom;
+  const firstKey = points[0].monthKey;
+  const lastKey = points[points.length - 1].monthKey;
+  const spanMonths = lastKey - firstKey + 1;
+  const slotWidth = layout.innerWidth / Math.max(1, spanMonths);
+  const xForKey = (monthKey) => layout.left
+    + ((monthKey - firstKey) + 0.5) * slotWidth;
+  const yMax = points.reduce((acc, point) => Math.max(acc, point.ratio), 0);
+  const yForValue = (value) => layout.top + layout.innerHeight
+    - (yMax > 0 ? (value / yMax) * layout.innerHeight : 0);
+
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svgAttr(svg, {
+    viewBox: `0 0 ${width} ${height}`,
+    width,
+    height,
+    role: "img",
+    "aria-label": "Elevation gain per distance by month",
+  });
+  svg.classList.add("progress-svg", "hilliness-svg");
+
+  // X gridlines: month slots for short spans (year at January), Januaries
+  // only for long spans.
+  const showMonths = spanMonths <= HILLINESS_MONTH_LABEL_MAX_MONTHS;
+  for (let monthKey = firstKey; monthKey <= lastKey; monthKey += 1) {
+    const monthIndex = monthKey % 12;
+    const isYearBoundary = monthIndex === 0;
+    if (!showMonths && !isYearBoundary) continue;
+    const x = xForKey(monthKey);
+    const line = document.createElementNS(SVG_NS, "line");
+    svgAttr(line, {
+      x1: x, y1: layout.top, x2: x, y2: layout.top + layout.innerHeight,
+      class: "progress-gridline",
+    });
+    svg.appendChild(line);
+    const labelText = isYearBoundary
+      ? String(Math.floor(monthKey / 12))
+      : (showMonths ? MONTHS[monthIndex] : "");
+    if (labelText) {
+      const label = document.createElementNS(SVG_NS, "text");
+      svgAttr(label, {
+        x, y: layout.top + layout.innerHeight + 14,
+        class: "progress-axis-label hilliness-axis-label",
+      });
+      label.textContent = labelText;
+      svg.appendChild(label);
+    }
+  }
+
+  // Y gridlines + tick labels at 25/50/75/100%.
+  [0.25, 0.5, 0.75, 1].forEach((fraction) => {
+    const value = yMax * fraction;
+    const y = yForValue(value);
+    const line = document.createElementNS(SVG_NS, "line");
+    svgAttr(line, {
+      x1: layout.left, y1: y, x2: layout.left + layout.innerWidth, y2: y,
+      class: "progress-gridline",
+    });
+    svg.appendChild(line);
+    const label = document.createElementNS(SVG_NS, "text");
+    svgAttr(label, {
+      x: layout.left - 6, y: y + 3,
+      class: "progress-axis-label progress-axis-label-y",
+    });
+    label.textContent = formatHillinessValue(value, units);
+    svg.appendChild(label);
+  });
+
+  // Line segments over consecutive months; isolated months render a dot.
+  const color = progressYearColor(3);
+  let segment = [];
+  const flushSegment = () => {
+    if (segment.length >= 2) {
+      const polyline = document.createElementNS(SVG_NS, "polyline");
+      svgAttr(polyline, {
+        points: segment
+          .map((point) => `${xForKey(point.monthKey).toFixed(1)},${yForValue(point.ratio).toFixed(1)}`)
+          .join(" "),
+        class: "hilliness-line",
+        stroke: color,
+      });
+      svg.appendChild(polyline);
+    } else if (segment.length === 1) {
+      const dot = document.createElementNS(SVG_NS, "circle");
+      svgAttr(dot, {
+        cx: xForKey(segment[0].monthKey).toFixed(1),
+        cy: yForValue(segment[0].ratio).toFixed(1),
+        r: 2.5,
+        fill: color,
+        class: "hilliness-dot",
+      });
+      svg.appendChild(dot);
+    }
+    segment = [];
+  };
+  points.forEach((point, index) => {
+    if (index > 0 && point.monthKey - points[index - 1].monthKey !== 1) {
+      flushSegment();
+    }
+    segment.push(point);
+  });
+  flushSegment();
+
+  // Per-month hover strips for active months.
+  points.forEach((point) => {
+    const lines = [
+      `${MONTHS[point.monthIndex]} ${point.year}`,
+      formatHillinessValue(point.ratio, units),
+      `Distance: ${formatTrendsMetricValue("distance", point.distance, units)}`,
+      `Elevation: ${formatTrendsMetricValue("elevation_gain", point.elevationGain, units)}`,
+    ];
+    const strip = document.createElementNS(SVG_NS, "rect");
+    svgAttr(strip, {
+      x: (xForKey(point.monthKey) - slotWidth / 2).toFixed(1),
+      y: layout.top,
+      width: Math.max(1, slotWidth).toFixed(1),
+      height: layout.innerHeight,
+      class: "progress-hover-strip",
+    });
+    attachTooltip(strip, lines.join("\n"));
+    svg.appendChild(strip);
+  });
+
+  chartArea.appendChild(svg);
+  body.appendChild(chartArea);
+  card.appendChild(body);
+  return card;
+}
+
 function buildSeasonalityCard(payload, types, years, options = {}) {
   const units = normalizeUnits(options.units || payload.units || DEFAULT_UNITS);
   const onStateChange = typeof options.onStateChange === "function"
@@ -7058,6 +7277,17 @@ async function init() {
             ),
           );
           list.appendChild(statsPairRow);
+          const hillinessCard = buildHillinessCard(payload, types, cardYears, {
+            units: currentUnits,
+          });
+          setCardScrollKey(hillinessCard, `${combinedSelectionKey}:hilliness`);
+          list.appendChild(
+            buildLabeledCardRow(
+              "Hilliness",
+              hillinessCard,
+              "hilliness",
+            ),
+          );
         }
         cardYears.forEach((year) => {
           const yearData = payload.aggregates?.[String(year)] || {};
@@ -7215,6 +7445,17 @@ async function init() {
               ),
             );
             list.appendChild(statsPairRow);
+            const hillinessCard = buildHillinessCard(payload, [type], cardYears, {
+              units: currentUnits,
+            });
+            setCardScrollKey(hillinessCard, `${typeCardKey}:hilliness`);
+            list.appendChild(
+              buildLabeledCardRow(
+                "Hilliness",
+                hillinessCard,
+                "hilliness",
+              ),
+            );
           }
           cardYears.forEach((year) => {
             const aggregates = payload.aggregates?.[String(year)]?.[type] || {};
