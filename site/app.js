@@ -550,23 +550,22 @@ function reduceTopButtonSelection({
   allValues,
   normalizeValue = (value) => value,
 }) {
+  // "All" always resets to the default all-mode view (no explicit chips).
   if (rawValue === "all") {
-    if (!allValues.length) {
-      return { allMode: true, selectedValues: new Set() };
-    }
-    const hasExplicitAllSelection = !allMode
-      && selectedValues.size === allValues.length
-      && allValues.every((value) => selectedValues.has(value));
-    if (hasExplicitAllSelection) {
-      return { allMode: true, selectedValues: new Set() };
-    }
-    return { allMode: false, selectedValues: new Set(allValues) };
+    return { allMode: true, selectedValues: new Set() };
   }
   const normalizedValue = normalizeValue(rawValue);
   if (!allValues.includes(normalizedValue)) {
     return { allMode, selectedValues };
   }
-  if (allMode) {
+  // From any "everything selected" state (all-mode or every value explicitly
+  // selected), a value click starts a fresh selection with just that value;
+  // later clicks toggle membership.
+  const hasExplicitAllSelection = !allMode
+    && allValues.length > 0
+    && selectedValues.size === allValues.length
+    && allValues.every((value) => selectedValues.has(value));
+  if (allMode || hasExplicitAllSelection) {
     return {
       allMode: false,
       selectedValues: new Set([normalizedValue]),
@@ -6162,6 +6161,49 @@ function buildRecordsCard(payload, types, years, options = {}) {
   const groups = document.createElement("div");
   groups.className = "records-groups";
 
+  // Optional leading "Best Activity" group from per-activity metrics
+  // (present only when the payload's activities carry them).
+  const activityList = Array.isArray(options.activities) ? options.activities : [];
+  if (activitiesHaveMetrics(activityList)) {
+    const activityRecords = computeActivityRecords(activityList);
+    const rowItems = [
+      { metricKey: "distance", label: "Distance" },
+      { metricKey: "moving_time", label: "Time" },
+      { metricKey: "elevation_gain", label: "Elevation" },
+    ].filter((item) => activityRecords[item.metricKey]);
+    if (rowItems.length) {
+      const group = document.createElement("div");
+      group.className = "record-group";
+      const title = document.createElement("div");
+      title.className = "record-group-title";
+      title.textContent = "Best Activity";
+      group.appendChild(title);
+      rowItems.forEach((item) => {
+        const record = activityRecords[item.metricKey];
+        const row = document.createElement("div");
+        row.className = "record-row";
+        const metricLabel = document.createElement("div");
+        metricLabel.className = "record-metric";
+        metricLabel.textContent = item.label;
+        const detail = document.createElement("div");
+        detail.className = "record-detail";
+        const value = document.createElement("span");
+        value.className = "record-value";
+        value.textContent = formatTrendsMetricValue(item.metricKey, record.value, units);
+        const when = document.createElement("span");
+        when.className = "record-when";
+        when.textContent = ` · ${formatRecordDate(record.activity.date)}`;
+        detail.appendChild(value);
+        detail.appendChild(when);
+        row.appendChild(metricLabel);
+        row.appendChild(detail);
+        attachTooltip(row, buildActivityTooltipLines(record.activity, units).join("\n"));
+        group.appendChild(row);
+      });
+      groups.appendChild(group);
+    }
+  }
+
   RECORD_PERIOD_ITEMS.forEach((period) => {
     const periodRecords = records[period.key];
     const rows = RECORDS_METRIC_ORDER
@@ -6539,57 +6581,6 @@ function buildActivityTooltipLines(activity, units) {
     lines.push(`Avg speed: ${formatSpeedValue(distance / movingTime, units)}`);
   }
   return lines;
-}
-
-function buildActivityRecordsCard(activities, options = {}) {
-  const units = normalizeUnits(options.units || DEFAULT_UNITS);
-  const records = computeActivityRecords(activities);
-  const rowItems = [
-    { metricKey: "distance", label: "Distance" },
-    { metricKey: "moving_time", label: "Time" },
-    { metricKey: "elevation_gain", label: "Climbing" },
-  ].filter((item) => records[item.metricKey]);
-  if (!rowItems.length) {
-    return buildEmptySelectionCard();
-  }
-
-  const card = document.createElement("div");
-  card.className = "card records-card activity-records-card";
-  const groups = document.createElement("div");
-  groups.className = "records-groups";
-  const group = document.createElement("div");
-  group.className = "record-group";
-  const title = document.createElement("div");
-  title.className = "record-group-title";
-  title.textContent = "Best Single Activity";
-  group.appendChild(title);
-
-  rowItems.forEach((item) => {
-    const record = records[item.metricKey];
-    const row = document.createElement("div");
-    row.className = "record-row";
-    const metricLabel = document.createElement("div");
-    metricLabel.className = "record-metric";
-    metricLabel.textContent = item.label;
-    const detail = document.createElement("div");
-    detail.className = "record-detail";
-    const value = document.createElement("span");
-    value.className = "record-value";
-    value.textContent = formatTrendsMetricValue(item.metricKey, record.value, units);
-    const when = document.createElement("span");
-    when.className = "record-when";
-    when.textContent = ` · ${formatRecordDate(record.activity.date)}`;
-    detail.appendChild(value);
-    detail.appendChild(when);
-    row.appendChild(metricLabel);
-    row.appendChild(detail);
-    attachTooltip(row, buildActivityTooltipLines(record.activity, units).join("\n"));
-    group.appendChild(row);
-  });
-
-  groups.appendChild(group);
-  card.appendChild(groups);
-  return card;
 }
 
 function buildDistanceHistogramCard(activities, options = {}) {
@@ -7852,9 +7843,11 @@ async function init() {
             ),
           );
           list.appendChild(pairRow);
+          const activityList = getFilteredActivities(payload, types, cardYears);
           const recordsCard = buildRecordsCard(payload, types, cardYears, {
             units: currentUnits,
             weekStart: setupWeekStart,
+            activities: activityList,
           });
           setCardScrollKey(recordsCard, `${combinedSelectionKey}:records`);
           list.appendChild(
@@ -7929,25 +7922,17 @@ async function init() {
             ),
           );
           list.appendChild(ratioPairRow);
-          const activityList = getFilteredActivities(payload, types, cardYears);
           if (activitiesHaveMetrics(activityList)) {
-            const rideRecordsCard = buildActivityRecordsCard(activityList, {
-              units: currentUnits,
-            });
-            setCardScrollKey(rideRecordsCard, `${combinedSelectionKey}:activity-records`);
             const histogramCard = buildDistanceHistogramCard(activityList, {
               units: currentUnits,
             });
             setCardScrollKey(histogramCard, `${combinedSelectionKey}:histogram`);
+            const scatterCard = buildScatterCard(activityList, {
+              units: currentUnits,
+            });
+            setCardScrollKey(scatterCard, `${combinedSelectionKey}:scatter`);
             const activityPairRow = document.createElement("div");
             activityPairRow.className = "labeled-card-row-pair";
-            activityPairRow.appendChild(
-              buildLabeledCardRow(
-                "Ride Records",
-                rideRecordsCard,
-                "activity-records",
-              ),
-            );
             activityPairRow.appendChild(
               buildLabeledCardRow(
                 "Distance Distribution",
@@ -7955,18 +7940,14 @@ async function init() {
                 "histogram",
               ),
             );
-            list.appendChild(activityPairRow);
-            const scatterCard = buildScatterCard(activityList, {
-              units: currentUnits,
-            });
-            setCardScrollKey(scatterCard, `${combinedSelectionKey}:scatter`);
-            list.appendChild(
+            activityPairRow.appendChild(
               buildLabeledCardRow(
                 "Distance vs Elevation",
                 scatterCard,
                 "scatter",
               ),
             );
+            list.appendChild(activityPairRow);
           }
         }
         cardYears.forEach((year) => {
@@ -8073,9 +8054,11 @@ async function init() {
               ),
             );
             list.appendChild(pairRow);
+            const activityList = getFilteredActivities(payload, [type], cardYears);
             const recordsCard = buildRecordsCard(payload, [type], cardYears, {
               units: currentUnits,
               weekStart: setupWeekStart,
+              activities: activityList,
             });
             setCardScrollKey(recordsCard, `${typeCardKey}:records`);
             list.appendChild(
@@ -8150,25 +8133,17 @@ async function init() {
               ),
             );
             list.appendChild(ratioPairRow);
-            const activityList = getFilteredActivities(payload, [type], cardYears);
             if (activitiesHaveMetrics(activityList)) {
-              const rideRecordsCard = buildActivityRecordsCard(activityList, {
-                units: currentUnits,
-              });
-              setCardScrollKey(rideRecordsCard, `${typeCardKey}:activity-records`);
               const histogramCard = buildDistanceHistogramCard(activityList, {
                 units: currentUnits,
               });
               setCardScrollKey(histogramCard, `${typeCardKey}:histogram`);
+              const scatterCard = buildScatterCard(activityList, {
+                units: currentUnits,
+              });
+              setCardScrollKey(scatterCard, `${typeCardKey}:scatter`);
               const activityPairRow = document.createElement("div");
               activityPairRow.className = "labeled-card-row-pair";
-              activityPairRow.appendChild(
-                buildLabeledCardRow(
-                  "Ride Records",
-                  rideRecordsCard,
-                  "activity-records",
-                ),
-              );
               activityPairRow.appendChild(
                 buildLabeledCardRow(
                   "Distance Distribution",
@@ -8176,18 +8151,14 @@ async function init() {
                   "histogram",
                 ),
               );
-              list.appendChild(activityPairRow);
-              const scatterCard = buildScatterCard(activityList, {
-                units: currentUnits,
-              });
-              setCardScrollKey(scatterCard, `${typeCardKey}:scatter`);
-              list.appendChild(
+              activityPairRow.appendChild(
                 buildLabeledCardRow(
                   "Distance vs Elevation",
                   scatterCard,
                   "scatter",
                 ),
               );
+              list.appendChild(activityPairRow);
             }
           }
           cardYears.forEach((year) => {

@@ -1074,22 +1074,27 @@
         width: 100%;
       }
 
+      /* Uniform card widths: single-card rows span the full content rail
+         (the width of the year heatmap cards); two-card rows split it in
+         half and stretch both cards to the same height. */
       .labeled-card-row-pair {
         display: flex;
         flex-wrap: wrap;
         gap: var(--space-6);
-        align-items: flex-start;
+        align-items: stretch;
       }
 
       .labeled-card-row-pair > .labeled-card-row {
-        flex: 0 1 auto;
+        flex: 1 1 320px;
         min-width: 0;
         max-width: 100%;
+        display: flex;
+        flex-direction: column;
       }
 
       .labeled-card-row-pair > .labeled-card-row > .card {
-        width: max-content;
-        max-width: 100%;
+        width: 100%;
+        flex: 1 1 auto;
       }
 
       .progress-card {
@@ -1101,18 +1106,21 @@
       .progress-body {
         display: grid;
         row-gap: var(--space-5);
-        width: max-content;
+        width: 100%;
       }
 
       .progress-chart-area {
         border-radius: 6px;
         background: rgba(15, 23, 42, 0.8);
         padding: var(--space-3);
-        width: max-content;
+        width: 100%;
       }
 
+      /* Charts are viewBox-based SVGs: let them scale to fill their card. */
       .progress-svg {
         display: block;
+        width: 100%;
+        height: auto;
       }
 
       .progress-gridline {
@@ -1172,19 +1180,15 @@
         flex: 0 0 auto;
       }
 
-      .labeled-card-row-records > .card {
-        width: max-content;
-        max-width: 100%;
-      }
-
-      .labeled-card-row-load > .card {
-        width: max-content;
-        max-width: 100%;
-      }
-
+      .labeled-card-row-records > .card,
+      .labeled-card-row-load > .card,
       .labeled-card-row-streaks > .card {
-        width: max-content;
-        max-width: 100%;
+        width: 100%;
+      }
+
+      /* Spread record groups across the full card width. */
+      .records-groups {
+        justify-content: space-evenly;
       }
 
       /* Streaks reuses the records card styles; only the label column is
@@ -1194,8 +1198,7 @@
       }
 
       .labeled-card-row-seasonality > .card {
-        width: max-content;
-        max-width: 100%;
+        width: 100%;
       }
 
       .seasonality-card {
@@ -1207,16 +1210,14 @@
       .seasonality-body {
         display: grid;
         row-gap: var(--space-5);
-        width: max-content;
-        max-width: 100%;
+        width: 100%;
       }
 
       .seasonality-chart-area {
         border-radius: 6px;
         background: rgba(15, 23, 42, 0.8);
         padding: var(--space-3);
-        width: max-content;
-        max-width: 100%;
+        width: 100%;
       }
 
       .seasonality-bar {
@@ -1229,8 +1230,7 @@
       }
 
       .labeled-card-row-hilliness > .card {
-        width: max-content;
-        max-width: 100%;
+        width: 100%;
       }
 
       .hilliness-card {
@@ -1242,16 +1242,14 @@
       .hilliness-body {
         display: grid;
         row-gap: var(--space-5);
-        width: max-content;
-        max-width: 100%;
+        width: 100%;
       }
 
       .hilliness-chart-area {
         border-radius: 6px;
         background: rgba(15, 23, 42, 0.8);
         padding: var(--space-3);
-        width: max-content;
-        max-width: 100%;
+        width: 100%;
       }
 
       .hilliness-line {
@@ -1267,8 +1265,7 @@
       }
 
       .labeled-card-row-speed > .card {
-        width: max-content;
-        max-width: 100%;
+        width: 100%;
       }
 
       .speed-card {
@@ -1280,16 +1277,14 @@
       .speed-body {
         display: grid;
         row-gap: var(--space-5);
-        width: max-content;
-        max-width: 100%;
+        width: 100%;
       }
 
       .speed-chart-area {
         border-radius: 6px;
         background: rgba(15, 23, 42, 0.8);
         padding: var(--space-3);
-        width: max-content;
-        max-width: 100%;
+        width: 100%;
       }
 
       .speed-line {
@@ -1300,11 +1295,9 @@
         opacity: 0.9;
       }
 
-      .labeled-card-row-activity-records > .card,
       .labeled-card-row-histogram > .card,
       .labeled-card-row-scatter > .card {
-        width: max-content;
-        max-width: 100%;
+        width: 100%;
       }
 
       .histogram-card,
@@ -1318,8 +1311,7 @@
       .scatter-body {
         display: grid;
         row-gap: var(--space-5);
-        width: max-content;
-        max-width: 100%;
+        width: 100%;
       }
 
       .histogram-chart-area,
@@ -1327,8 +1319,7 @@
         border-radius: 6px;
         background: rgba(15, 23, 42, 0.8);
         padding: var(--space-3);
-        width: max-content;
-        max-width: 100%;
+        width: 100%;
       }
 
       .histogram-bar {
@@ -1358,16 +1349,14 @@
       .load-body {
         display: grid;
         row-gap: var(--space-5);
-        width: max-content;
-        max-width: 100%;
+        width: 100%;
       }
 
       .load-chart-area {
         border-radius: 6px;
         background: rgba(15, 23, 42, 0.8);
         padding: var(--space-3);
-        width: max-content;
-        max-width: 100%;
+        width: 100%;
       }
 
       .load-line {

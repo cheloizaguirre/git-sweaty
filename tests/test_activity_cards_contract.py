@@ -185,6 +185,54 @@ class ActivityComputationTests(unittest.TestCase):
         )
 
 
+class UniformCardWidthContractTests(unittest.TestCase):
+    """Single-card rows span the content rail; pairs split it 50/50 with
+    equal heights; viewBox SVG charts scale to fill their cards."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        with open(INDEX_HTML_PATH, "r", encoding="utf-8") as handle:
+            cls.index_html = handle.read()
+
+    def _block(self, selector: str) -> str:
+        index = self.index_html.index(selector)
+        return self.index_html[index:self.index_html.index("}", index)]
+
+    def test_pair_rows_split_evenly_and_stretch(self) -> None:
+        pair = self._block(".labeled-card-row-pair {")
+        self.assertIn("align-items: stretch;", pair)
+        child = self._block(".labeled-card-row-pair > .labeled-card-row {")
+        self.assertIn("flex: 1 1 320px;", child)
+        card = self._block(".labeled-card-row-pair > .labeled-card-row > .card {")
+        self.assertIn("width: 100%;", card)
+        self.assertIn("flex: 1 1 auto;", card)
+
+    def test_single_card_rows_span_full_width(self) -> None:
+        block = self._block(".labeled-card-row-records > .card")
+        self.assertIn("width: 100%;", block)
+        self.assertNotIn("max-content", block)
+
+    def test_svg_charts_scale_to_card_width(self) -> None:
+        block = self._block(".progress-svg {")
+        self.assertIn("width: 100%;", block)
+        self.assertIn("height: auto;", block)
+
+    def test_no_card_rows_shrink_wrap_anymore(self) -> None:
+        for selector in (
+            ".labeled-card-row-load > .card",
+            ".labeled-card-row-streaks > .card",
+            ".labeled-card-row-seasonality > .card",
+            ".labeled-card-row-hilliness > .card",
+            ".labeled-card-row-speed > .card",
+            ".labeled-card-row-histogram > .card",
+            ".labeled-card-row-scatter > .card",
+        ):
+            self.assertIn(selector, self.index_html)
+            index = self.index_html.index(selector)
+            block = self.index_html[index:self.index_html.index("}", index)]
+            self.assertNotIn("max-content", block)
+
+
 class ActivityCardsLayoutContractTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -194,15 +242,25 @@ class ActivityCardsLayoutContractTests(unittest.TestCase):
             cls.index_html = handle.read()
 
     def test_cards_are_wired_into_both_render_branches(self) -> None:
-        self.assertEqual(self.app_js.count(":activity-records`"), 2)
         self.assertEqual(self.app_js.count(":histogram`"), 2)
         self.assertEqual(self.app_js.count(":scatter`"), 2)
-        for label in ('"Ride Records",', '"Distance Distribution",', '"Distance vs Elevation",'):
+        for label in ('"Distance Distribution",', '"Distance vs Elevation",'):
             self.assertEqual(self.app_js.count(label), 2)
 
+    def test_best_activity_group_merged_into_records_card(self) -> None:
+        # The per-activity records render as a leading group inside the
+        # Records card instead of a separate card.
+        build = self.app_js.split("function buildRecordsCard", 1)[1]
+        build = build.split("\nfunction renderLoadError", 1)[0]
+        self.assertIn('"Best Activity"', build)
+        self.assertIn("computeActivityRecords(", build)
+        self.assertEqual(self.app_js.count("activities: activityList,"), 2)
+
     def test_cards_hide_on_payloads_without_metrics(self) -> None:
+        # Two wiring guards (histogram/scatter pair) plus the guard inside
+        # buildRecordsCard for the Best Activity group.
         self.assertEqual(
-            self.app_js.count("if (activitiesHaveMetrics(activityList)) {"), 2
+            self.app_js.count("if (activitiesHaveMetrics(activityList)) {"), 3
         )
 
     def test_cards_are_stateless(self) -> None:
@@ -210,7 +268,7 @@ class ActivityCardsLayoutContractTests(unittest.TestCase):
         self.assertNotIn("selectedHistogram", self.app_js)
         self.assertNotIn("selectedScatter", self.app_js)
 
-    def test_records_and_histogram_share_a_pair_row(self) -> None:
+    def test_histogram_and_scatter_share_a_pair_row(self) -> None:
         self.assertEqual(
             self.app_js.count('activityPairRow.className = "labeled-card-row-pair";'),
             2,
@@ -225,6 +283,7 @@ class ActivityCardsLayoutContractTests(unittest.TestCase):
             ".labeled-card-row-scatter > .card",
         ):
             self.assertIn(selector, self.index_html)
+        self.assertNotIn(".labeled-card-row-activity-records", self.index_html)
 
 
 if __name__ == "__main__":

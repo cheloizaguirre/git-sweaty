@@ -5,24 +5,25 @@ Refactors should preserve these behaviors exactly unless a deliberate product ch
 
 ## Top Row Buttons
 
+Both rows share `reduceTopButtonSelection`. (Behavior deliberately changed
+2026-07-19 at Marcelo's request: `all` no longer toggles into explicit-all.)
+
 ### Type button row (`toggleType`)
 
 1. Fresh-load default state is implicit all (`allTypesMode = true`, `selectedTypes` empty) with no active top-row type chip highlight.
-2. Clicking `all` from implicit all switches to explicit all (`allTypesMode = false`, `selectedTypes` contains every type).
-3. Clicking `all` from explicit all toggles back to implicit all.
-4. Clicking a specific type while in all mode exits all mode and selects only that type.
-5. Clicking a selected type removes it.
-6. If the last selected type is removed, the state snaps back to all mode.
+2. Clicking `all` always resets to implicit all (clears any explicit selection); no chip is highlighted.
+3. Clicking a specific type while everything is selected (implicit all mode, or every type explicitly selected) starts a fresh selection with only that type.
+4. Later clicks toggle membership: clicking a selected type removes it, an unselected type adds it.
+5. If the last selected type is removed, the state snaps back to implicit all mode.
 
 ### Year button row (`toggleYear`)
 
 1. Fresh-load default state is implicit all (`allYearsMode = true`, `selectedYears` empty) with no active top-row year chip highlight.
-2. Clicking `all` from implicit all switches to explicit all (`allYearsMode = false`, `selectedYears` contains every visible year).
-3. Clicking `all` from explicit all toggles back to implicit all.
-4. Clicking a specific year while in all mode exits all mode and selects only that year.
-5. Clicking a selected year removes it.
-6. If the last selected year is removed, the state snaps back to all mode.
-7. Year values outside `currentVisibleYears` are ignored.
+2. Clicking `all` always resets to implicit all (clears any explicit selection); no chip is highlighted.
+3. Clicking a specific year while everything is selected (implicit all mode, or every visible year explicitly selected) starts a fresh selection with only that year.
+4. Later clicks toggle membership: clicking a selected year removes it, an unselected year adds it.
+5. If the last selected year is removed, the state snaps back to implicit all mode.
+6. Year values outside `currentVisibleYears` are ignored.
 
 ## Dropdown Menus
 
@@ -334,26 +335,27 @@ as Hilliness.
 3. Line segmentation, gap handling, adaptive X labels, and per-month hover
    strips (month, speed, distance, time) all mirror the Hilliness card.
 
-## Per-Activity Cards (Ride Records, Distance Distribution, Distance vs Elevation)
+## Per-Activity Features (Best Activity group, Distance Distribution, Distance vs Elevation)
 
-These three cards use the per-activity metric fields (`distance`,
+These features use the per-activity metric fields (`distance`,
 `moving_time`, `elevation_gain`) that `generate_heatmaps.py::_load_activities`
-adds to `activities[]` (invalid/negative values coerce to 0.0). All three are
-stateless and render after the Hilliness/Average Speed pair in both render
-branches: Ride Records + Distance Distribution share a `.labeled-card-row-pair`
-(`activityPairRow`), then Distance vs Elevation gets its own row. On payloads
-whose activities lack these fields (`activitiesHaveMetrics`), all three rows
-are omitted entirely rather than rendering empty cards. Activities are
-filtered through `getFilteredActivities` (type + year).
+adds to `activities[]` (invalid/negative values coerce to 0.0). Activities are
+filtered through `getFilteredActivities` (type + year). On payloads whose
+activities lack these fields (`activitiesHaveMetrics`), the Best Activity
+group and the Distribution/Scatter pair are omitted entirely rather than
+rendering empty. Distance Distribution + Distance vs Elevation share a
+`.labeled-card-row-pair` (`activityPairRow`) after the Hilliness/Average
+Speed pair; both are stateless.
 
-### Ride Records
+### Best Activity group (inside the Records card)
 
 1. `computeActivityRecords` picks the single best activity per metric
-   (Distance, Time, Climbing); ties keep the earliest by date; metrics with
+   (Distance, Time, Elevation); ties keep the earliest by date; metrics with
    no positive value are omitted.
-2. Reuses the Records card styles; rows are "value · date" and tooltips show
-   the activity name (when present), date, type, all metrics, and average
-   speed.
+2. Renders as the leading group of the Records card (before Best Day) when
+   `options.activities` carries metrics; rows are "value · date" and
+   tooltips show the activity name (when present), date, type, all metrics,
+   and average speed.
 
 ### Distance Distribution
 
