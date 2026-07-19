@@ -252,3 +252,35 @@ The "Training Load" labeled card row renders as its own full-width row below
 5. The chart reuses the shared progress chart SVG styles (gridlines, axis
    labels, hover strips, legend); only the line and card container styles are
    load-specific.
+
+## Streaks & Gaps Card
+
+The "Streaks & Gaps" labeled card row renders below "Training Load" in both
+the combined-types branch and the single-type branch of `update()`. The card
+is stateless: it has no chips or selections, so it does not participate in
+`Reset All`. It reuses the Records card styles (`records-card`,
+`record-group`, `record-row`, …) with a wider label column.
+
+### Computation (`computeStreakStats`)
+
+1. Active days are dates with an activity count > 0 across the selected
+   types/years, on an epoch-day timeline (so streaks span year boundaries).
+   Active weeks bucket those days by the configured week start
+   (`streakWeekStartEpochDay`).
+2. Longest Streak is the longest run of consecutive active weeks; ties keep
+   the earliest run.
+3. Current Streak is the run ending at the week containing today, or at the
+   week before it (grace for an in-progress week with no activity yet, noted
+   in the tooltip). Otherwise it shows "0 weeks". Filtering to past years
+   naturally yields 0.
+4. Longest Break is the most consecutive days with no activity between two
+   active days; ties keep the earliest gap. Current Break is days since the
+   last active day (hidden when 0).
+
+### Display
+
+1. Two groups — Streaks (Longest Streak, Current Streak) and Gaps (Longest
+   Break, Current Break) — with rows as "value · when" (streaks show their
+   week date range or "since <date>"; breaks show the gap's date range).
+2. Row tooltips give the full date range/context via the shared tooltip
+   system. Values rebuild on filter changes; units do not apply.

@@ -4208,6 +4208,111 @@ function computeRollingLoadSeries(aggregates, types, years, metricKey, options =
   return { firstDay, lastDay, shortWindow, longWindow, points };
 }
 
+function streakWeekStartEpochDay(epochDay, weekStart) {
+  const weekStartIndex = weekStart === "monday" ? 1 : 0;
+  // Epoch day 0 (1970-01-01) was a Thursday; 0 = Sunday in this index.
+  const dayOfWeek = (((epochDay + 4) % 7) + 7) % 7;
+  const delta = (dayOfWeek - weekStartIndex + 7) % 7;
+  return epochDay - delta;
+}
+
+function computeStreakStats(aggregates, types, years, weekStart, referenceEpochDay) {
+  const typeList = Array.isArray(types) ? types : [];
+  const yearList = Array.isArray(years) ? years : [];
+
+  const activeDaySet = new Set();
+  yearList.forEach((year) => {
+    const yearData = aggregates?.[String(year)] || {};
+    typeList.forEach((type) => {
+      Object.entries(yearData?.[type] || {}).forEach(([dateStr, entry]) => {
+        if (Number(entry?.count || 0) <= 0) return;
+        const epochDay = loadEpochDay(dateStr);
+        if (epochDay === null) return;
+        activeDaySet.add(epochDay);
+      });
+    });
+  });
+  if (!activeDaySet.size) return null;
+
+  const activeDays = Array.from(activeDaySet).sort((a, b) => a - b);
+  const weekSet = new Set(
+    activeDays.map((day) => streakWeekStartEpochDay(day, weekStart)),
+  );
+  const weeks = Array.from(weekSet).sort((a, b) => a - b);
+
+  // Longest active-week streak; ties keep the earliest run (chronological
+  // iteration, strictly-greater replacement).
+  let longestStreak = null;
+  let runStart = weeks[0];
+  let prevWeek = weeks[0];
+  const closeRun = (endWeek) => {
+    const weekCount = (endWeek - runStart) / 7 + 1;
+    if (!longestStreak || weekCount > longestStreak.weeks) {
+      longestStreak = { weeks: weekCount, startWeekDay: runStart, endWeekDay: endWeek };
+    }
+  };
+  for (let i = 1; i < weeks.length; i += 1) {
+    if (weeks[i] - prevWeek === 7) {
+      prevWeek = weeks[i];
+      continue;
+    }
+    closeRun(prevWeek);
+    runStart = weeks[i];
+    prevWeek = weeks[i];
+  }
+  closeRun(prevWeek);
+
+  // Current streak: the run ending at the reference week, or at the week
+  // before it (grace for an in-progress week with no activity yet).
+  let currentStreak = null;
+  if (Number.isFinite(referenceEpochDay)) {
+    const referenceWeek = streakWeekStartEpochDay(referenceEpochDay, weekStart);
+    const lastWeek = weeks[weeks.length - 1];
+    if (lastWeek === referenceWeek || lastWeek === referenceWeek - 7) {
+      let startWeek = lastWeek;
+      while (weekSet.has(startWeek - 7)) startWeek -= 7;
+      currentStreak = {
+        weeks: (lastWeek - startWeek) / 7 + 1,
+        startWeekDay: startWeek,
+        endWeekDay: lastWeek,
+        includesReferenceWeek: lastWeek === referenceWeek,
+      };
+    }
+  }
+
+  // Longest break: most consecutive days without any activity between two
+  // active days; ties keep the earliest gap.
+  let longestBreak = null;
+  for (let i = 1; i < activeDays.length; i += 1) {
+    const gapDays = activeDays[i] - activeDays[i - 1] - 1;
+    if (gapDays <= 0) continue;
+    if (!longestBreak || gapDays > longestBreak.days) {
+      longestBreak = {
+        days: gapDays,
+        fromDay: activeDays[i - 1] + 1,
+        toDay: activeDays[i] - 1,
+      };
+    }
+  }
+
+  const lastActiveDay = activeDays[activeDays.length - 1];
+  const currentBreakDays = Number.isFinite(referenceEpochDay)
+    && referenceEpochDay > lastActiveDay
+    ? referenceEpochDay - lastActiveDay
+    : 0;
+
+  return {
+    activeDayCount: activeDays.length,
+    activeWeekCount: weeks.length,
+    firstActiveDay: activeDays[0],
+    lastActiveDay,
+    longestStreak,
+    currentStreak,
+    longestBreak,
+    currentBreakDays,
+  };
+}
+
 function getFilteredActivities(payload, types, years) {
   const activities = payload.activities || [];
   if (!activities.length) return [];
@@ -5828,6 +5933,160 @@ function buildRecordsCard(payload, types, years, options = {}) {
   return card;
 }
 
+function formatStreakEpochDate(epochDay) {
+  const date = loadDateFromEpochDay(epochDay);
+  return `${MONTHS[date.getUTCMonth()]} ${date.getUTCDate()}, ${date.getUTCFullYear()}`;
+}
+
+function formatStreakRange(fromDay, toDay) {
+  const from = loadDateFromEpochDay(fromDay);
+  const to = loadDateFromEpochDay(toDay);
+  const fromLabel = `${MONTHS[from.getUTCMonth()]} ${from.getUTCDate()}`;
+  const toLabel = `${MONTHS[to.getUTCMonth()]} ${to.getUTCDate()}, ${to.getUTCFullYear()}`;
+  if (from.getUTCFullYear() === to.getUTCFullYear()) {
+    return `${fromLabel} – ${toLabel}`;
+  }
+  return `${fromLabel}, ${from.getUTCFullYear()} – ${toLabel}`;
+}
+
+function formatStreakCount(value, singular) {
+  return `${Number(value).toLocaleString()} ${Number(value) === 1 ? singular : `${singular}s`}`;
+}
+
+function buildStreaksCard(payload, types, years, options = {}) {
+  const weekStart = normalizeWeekStart(options.weekStart);
+  const typeList = Array.isArray(types) ? types : [];
+  const yearsList = Array.isArray(years) ? years : [];
+  const aggregates = payload.aggregates || {};
+
+  let referenceEpochDay = Number(options.referenceEpochDay);
+  if (!Number.isFinite(referenceEpochDay)) {
+    const now = new Date();
+    referenceEpochDay = Math.round(
+      Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / MS_PER_DAY,
+    );
+  }
+
+  const stats = computeStreakStats(
+    aggregates, typeList, yearsList, weekStart, referenceEpochDay,
+  );
+  if (!stats) {
+    return buildEmptySelectionCard();
+  }
+
+  const card = document.createElement("div");
+  card.className = "card records-card streaks-card";
+
+  const groups = document.createElement("div");
+  groups.className = "records-groups";
+
+  const appendRow = (group, label, valueText, whenText, tooltipText) => {
+    const row = document.createElement("div");
+    row.className = "record-row";
+    const metricLabel = document.createElement("div");
+    metricLabel.className = "record-metric";
+    metricLabel.textContent = label;
+    const detail = document.createElement("div");
+    detail.className = "record-detail";
+    const value = document.createElement("span");
+    value.className = "record-value";
+    value.textContent = valueText;
+    detail.appendChild(value);
+    if (whenText) {
+      const when = document.createElement("span");
+      when.className = "record-when";
+      when.textContent = ` · ${whenText}`;
+      detail.appendChild(when);
+    }
+    row.appendChild(metricLabel);
+    row.appendChild(detail);
+    if (tooltipText) {
+      attachTooltip(row, tooltipText);
+    }
+    group.appendChild(row);
+  };
+
+  const buildGroup = (title) => {
+    const group = document.createElement("div");
+    group.className = "record-group";
+    const groupTitle = document.createElement("div");
+    groupTitle.className = "record-group-title";
+    groupTitle.textContent = title;
+    group.appendChild(groupTitle);
+    return group;
+  };
+
+  const streaksGroup = buildGroup("Streaks");
+  const { longestStreak, currentStreak, longestBreak, currentBreakDays } = stats;
+  if (longestStreak) {
+    const rangeLabel = formatStreakRange(
+      longestStreak.startWeekDay, longestStreak.endWeekDay + 6,
+    );
+    appendRow(
+      streaksGroup,
+      "Longest Streak",
+      formatStreakCount(longestStreak.weeks, "week"),
+      rangeLabel,
+      `${rangeLabel}\n${formatStreakCount(longestStreak.weeks, "consecutive active week")}`,
+    );
+  }
+  if (currentStreak) {
+    const sinceLabel = `since ${formatStreakEpochDate(currentStreak.startWeekDay)}`;
+    const tooltipLines = [
+      `Since ${formatStreakEpochDate(currentStreak.startWeekDay)}`,
+      formatStreakCount(currentStreak.weeks, "consecutive active week"),
+    ];
+    if (!currentStreak.includesReferenceWeek) {
+      tooltipLines.push("No activity yet in the current week.");
+    }
+    appendRow(
+      streaksGroup,
+      "Current Streak",
+      formatStreakCount(currentStreak.weeks, "week"),
+      sinceLabel,
+      tooltipLines.join("\n"),
+    );
+  } else {
+    appendRow(
+      streaksGroup,
+      "Current Streak",
+      "0 weeks",
+      "",
+      `Last active week began ${formatStreakEpochDate(
+        streakWeekStartEpochDay(stats.lastActiveDay, weekStart),
+      )}.`,
+    );
+  }
+  groups.appendChild(streaksGroup);
+
+  const gapsGroup = buildGroup("Gaps");
+  if (longestBreak) {
+    const rangeLabel = formatStreakRange(longestBreak.fromDay, longestBreak.toDay);
+    appendRow(
+      gapsGroup,
+      "Longest Break",
+      formatStreakCount(longestBreak.days, "day"),
+      rangeLabel,
+      `${rangeLabel}\n${formatStreakCount(longestBreak.days, "day")} without activity`,
+    );
+  }
+  if (currentBreakDays > 0) {
+    appendRow(
+      gapsGroup,
+      "Current Break",
+      formatStreakCount(currentBreakDays, "day"),
+      `since ${formatStreakEpochDate(stats.lastActiveDay)}`,
+      `No activity since ${formatStreakEpochDate(stats.lastActiveDay)}.`,
+    );
+  }
+  if (gapsGroup.children.length > 1) {
+    groups.appendChild(gapsGroup);
+  }
+
+  card.appendChild(groups);
+  return card;
+}
+
 function renderLoadError(error) {
   const detail = error && typeof error.message === "string" && error.message
     ? error.message
@@ -6487,6 +6746,17 @@ async function init() {
               "load",
             ),
           );
+          const streaksCard = buildStreaksCard(payload, types, cardYears, {
+            weekStart: setupWeekStart,
+          });
+          setCardScrollKey(streaksCard, `${combinedSelectionKey}:streaks`);
+          list.appendChild(
+            buildLabeledCardRow(
+              "Streaks & Gaps",
+              streaksCard,
+              "streaks",
+            ),
+          );
         }
         cardYears.forEach((year) => {
           const yearData = payload.aggregates?.[String(year)] || {};
@@ -6615,6 +6885,17 @@ async function init() {
                 "Training Load",
                 loadCard,
                 "load",
+              ),
+            );
+            const streaksCard = buildStreaksCard(payload, [type], cardYears, {
+              weekStart: setupWeekStart,
+            });
+            setCardScrollKey(streaksCard, `${typeCardKey}:streaks`);
+            list.appendChild(
+              buildLabeledCardRow(
+                "Streaks & Gaps",
+                streaksCard,
+                "streaks",
               ),
             );
           }

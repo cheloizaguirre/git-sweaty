@@ -1182,6 +1182,17 @@
         max-width: 100%;
       }
 
+      .labeled-card-row-streaks > .card {
+        width: max-content;
+        max-width: 100%;
+      }
+
+      /* Streaks reuses the records card styles; only the label column is
+         wider to fit "Longest Streak" / "Current Break". */
+      .streaks-card .record-row {
+        grid-template-columns: 110px max-content;
+      }
+
       .load-card {
         display: grid;
         grid-template-rows: auto auto;
