@@ -1300,6 +1300,55 @@
         opacity: 0.9;
       }
 
+      .labeled-card-row-activity-records > .card,
+      .labeled-card-row-histogram > .card,
+      .labeled-card-row-scatter > .card {
+        width: max-content;
+        max-width: 100%;
+      }
+
+      .histogram-card,
+      .scatter-card {
+        display: grid;
+        grid-template-rows: auto auto;
+        row-gap: var(--labeled-card-title-gap);
+      }
+
+      .histogram-body,
+      .scatter-body {
+        display: grid;
+        row-gap: var(--space-5);
+        width: max-content;
+        max-width: 100%;
+      }
+
+      .histogram-chart-area,
+      .scatter-chart-area {
+        border-radius: 6px;
+        background: rgba(15, 23, 42, 0.8);
+        padding: var(--space-3);
+        width: max-content;
+        max-width: 100%;
+      }
+
+      .histogram-bar {
+        fill: #72efdd;
+        opacity: 0.9;
+      }
+
+      .histogram-axis-label,
+      .scatter-axis-label {
+        text-anchor: middle;
+      }
+
+      .scatter-dot {
+        opacity: 0.75;
+      }
+
+      .scatter-dot:hover {
+        opacity: 1;
+      }
+
       .load-card {
         display: grid;
         grid-template-rows: auto auto;

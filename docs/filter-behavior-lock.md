@@ -334,6 +334,44 @@ as Hilliness.
 3. Line segmentation, gap handling, adaptive X labels, and per-month hover
    strips (month, speed, distance, time) all mirror the Hilliness card.
 
+## Per-Activity Cards (Ride Records, Distance Distribution, Distance vs Elevation)
+
+These three cards use the per-activity metric fields (`distance`,
+`moving_time`, `elevation_gain`) that `generate_heatmaps.py::_load_activities`
+adds to `activities[]` (invalid/negative values coerce to 0.0). All three are
+stateless and render after the Hilliness/Average Speed pair in both render
+branches: Ride Records + Distance Distribution share a `.labeled-card-row-pair`
+(`activityPairRow`), then Distance vs Elevation gets its own row. On payloads
+whose activities lack these fields (`activitiesHaveMetrics`), all three rows
+are omitted entirely rather than rendering empty cards. Activities are
+filtered through `getFilteredActivities` (type + year).
+
+### Ride Records
+
+1. `computeActivityRecords` picks the single best activity per metric
+   (Distance, Time, Climbing); ties keep the earliest by date; metrics with
+   no positive value are omitted.
+2. Reuses the Records card styles; rows are "value · date" and tooltips show
+   the activity name (when present), date, type, all metrics, and average
+   speed.
+
+### Distance Distribution
+
+1. `computeDistanceHistogram` bins activity distances in display units with
+   a nice bin size (1/2/5/10/15/20/25/50/100/200) chosen so ≤ 12 bins cover
+   the max; the max value clamps into the last bin.
+2. Bars show counts with integer Y ticks; bin-edge labels (every other bin
+   when > 8 bins) plus a unit label; hover shows the range, count, and share
+   of activities. Unit toggles rebuild via the normal dashboard rerender.
+
+### Distance vs Elevation
+
+1. One dot per activity with distance > 0 (x distance, y elevation gain),
+   colored by type accent (`getColors(type)[4]`); a type legend appears only
+   when multiple types are visible.
+2. Gridlines/ticks at 25/50/75/100% on both axes in active units; each dot
+   carries the shared activity tooltip.
+
 ## Streaks & Gaps Card
 
 The "Streaks & Gaps" labeled card row renders paired with "Seasonality" below

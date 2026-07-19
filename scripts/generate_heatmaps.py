@@ -1,4 +1,5 @@
 import argparse
+import math
 import os
 import re
 import subprocess
@@ -159,6 +160,16 @@ def _load_activities(
             "subtype": str(subtype),
             "hour": hour,
         }
+        # Per-activity metrics for client-side single-activity records and
+        # the distance-vs-elevation scatter.
+        for metric_key in ("distance", "moving_time", "elevation_gain"):
+            try:
+                metric_value = float(item.get(metric_key))
+            except (TypeError, ValueError):
+                metric_value = 0.0
+            if not math.isfinite(metric_value) or metric_value < 0:
+                metric_value = 0.0
+            activity[metric_key] = round(metric_value, 1)
         include_provider_activity_urls = include_activity_urls
         if source == "strava" and include_strava_activity_urls:
             include_provider_activity_urls = True

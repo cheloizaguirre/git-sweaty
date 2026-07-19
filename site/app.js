@@ -2505,6 +2505,29 @@ const SPEED_CHART_LAYOUT = Object.freeze({
   top: 10,
   bottom: 20,
 });
+// Per-activity cards (Ride Records, Distance Distribution, Distance vs
+// Elevation). They require the per-activity metric fields added to
+// activities[] by generate_heatmaps.py and hide themselves on older payloads.
+const ACTIVITY_RECORD_METRIC_KEYS = ["distance", "moving_time", "elevation_gain"];
+const HISTOGRAM_TARGET_BINS = 12;
+const HISTOGRAM_NICE_STEPS = [1, 2, 5, 10, 15, 20, 25, 50, 100, 200];
+const HISTOGRAM_CHART_LAYOUT = Object.freeze({
+  innerWidth: 400,
+  innerHeight: 150,
+  left: 40,
+  right: 12,
+  top: 10,
+  bottom: 20,
+  barGap: 4,
+});
+const SCATTER_CHART_LAYOUT = Object.freeze({
+  innerWidth: 440,
+  innerHeight: 240,
+  left: 56,
+  right: 12,
+  top: 10,
+  bottom: 24,
+});
 const SEASONALITY_DEFAULT_METRIC_KEY = "distance";
 // 12 bars; svg width = left + 12*barWidth + 11*barGap + right = 466px, so
 // the Seasonality card pairs with Streaks & Gaps inside the 1250px rail.
@@ -4239,6 +4262,72 @@ function computeRollingLoadSeries(aggregates, types, years, metricKey, options =
     });
   }
   return { firstDay, lastDay, shortWindow, longWindow, points };
+}
+
+function activityMetricValue(activity, metricKey) {
+  const value = Number(activity?.[metricKey]);
+  return Number.isFinite(value) && value > 0 ? value : 0;
+}
+
+function activitiesHaveMetrics(activities) {
+  return (Array.isArray(activities) ? activities : []).some((activity) => (
+    activityMetricValue(activity, "distance") > 0
+    || activityMetricValue(activity, "moving_time") > 0
+    || activityMetricValue(activity, "elevation_gain") > 0
+  ));
+}
+
+function computeActivityRecords(activities) {
+  // Ties keep the earliest activity: chronological iteration with
+  // strictly-greater replacement.
+  const list = (Array.isArray(activities) ? activities : [])
+    .slice()
+    .sort((a, b) => String(a?.date || "").localeCompare(String(b?.date || "")));
+  const records = {};
+  ACTIVITY_RECORD_METRIC_KEYS.forEach((metricKey) => {
+    let best = null;
+    list.forEach((activity) => {
+      const value = activityMetricValue(activity, metricKey);
+      if (value <= 0) return;
+      if (!best || value > best.value) {
+        best = { value, activity };
+      }
+    });
+    if (best) {
+      records[metricKey] = best;
+    }
+  });
+  return records;
+}
+
+function computeDistanceHistogram(activities, metersPerUnit, targetBins) {
+  const unitSize = Number(metersPerUnit) > 0 ? Number(metersPerUnit) : 1;
+  const binTarget = Number(targetBins) > 0 ? Number(targetBins) : HISTOGRAM_TARGET_BINS;
+  const values = (Array.isArray(activities) ? activities : [])
+    .map((activity) => activityMetricValue(activity, "distance") / unitSize)
+    .filter((value) => value > 0);
+  if (!values.length) return null;
+
+  const maxValue = values.reduce((acc, value) => Math.max(acc, value), 0);
+  let binSize = HISTOGRAM_NICE_STEPS[HISTOGRAM_NICE_STEPS.length - 1];
+  for (const step of HISTOGRAM_NICE_STEPS) {
+    if (maxValue / step <= binTarget) {
+      binSize = step;
+      break;
+    }
+  }
+  const binCount = Math.max(1, Math.ceil(maxValue / binSize));
+  const bins = Array.from({ length: binCount }, (_, index) => ({
+    index,
+    from: index * binSize,
+    to: (index + 1) * binSize,
+    count: 0,
+  }));
+  values.forEach((value) => {
+    const index = Math.min(binCount - 1, Math.floor(value / binSize));
+    bins[index].count += 1;
+  });
+  return { binSize, total: values.length, bins };
 }
 
 function computeSeasonalityProfile(aggregates, types, years, metricKey) {
@@ -6429,6 +6518,327 @@ function buildSpeedCard(payload, types, years, options = {}) {
   return card;
 }
 
+function buildActivityTooltipLines(activity, units) {
+  const lines = [];
+  const name = String(activity?.name || "").trim();
+  if (name) lines.push(name);
+  lines.push(`${formatRecordDate(activity?.date)} · ${displayType(activity?.type)}`);
+  const distance = activityMetricValue(activity, "distance");
+  const movingTime = activityMetricValue(activity, "moving_time");
+  const elevation = activityMetricValue(activity, "elevation_gain");
+  if (distance > 0) {
+    lines.push(`Distance: ${formatTrendsMetricValue("distance", distance, units)}`);
+  }
+  if (movingTime > 0) {
+    lines.push(`Time: ${formatTrendsMetricValue("moving_time", movingTime, units)}`);
+  }
+  if (elevation > 0) {
+    lines.push(`Elevation: ${formatTrendsMetricValue("elevation_gain", elevation, units)}`);
+  }
+  if (distance > 0 && movingTime > 0) {
+    lines.push(`Avg speed: ${formatSpeedValue(distance / movingTime, units)}`);
+  }
+  return lines;
+}
+
+function buildActivityRecordsCard(activities, options = {}) {
+  const units = normalizeUnits(options.units || DEFAULT_UNITS);
+  const records = computeActivityRecords(activities);
+  const rowItems = [
+    { metricKey: "distance", label: "Distance" },
+    { metricKey: "moving_time", label: "Time" },
+    { metricKey: "elevation_gain", label: "Climbing" },
+  ].filter((item) => records[item.metricKey]);
+  if (!rowItems.length) {
+    return buildEmptySelectionCard();
+  }
+
+  const card = document.createElement("div");
+  card.className = "card records-card activity-records-card";
+  const groups = document.createElement("div");
+  groups.className = "records-groups";
+  const group = document.createElement("div");
+  group.className = "record-group";
+  const title = document.createElement("div");
+  title.className = "record-group-title";
+  title.textContent = "Best Single Activity";
+  group.appendChild(title);
+
+  rowItems.forEach((item) => {
+    const record = records[item.metricKey];
+    const row = document.createElement("div");
+    row.className = "record-row";
+    const metricLabel = document.createElement("div");
+    metricLabel.className = "record-metric";
+    metricLabel.textContent = item.label;
+    const detail = document.createElement("div");
+    detail.className = "record-detail";
+    const value = document.createElement("span");
+    value.className = "record-value";
+    value.textContent = formatTrendsMetricValue(item.metricKey, record.value, units);
+    const when = document.createElement("span");
+    when.className = "record-when";
+    when.textContent = ` · ${formatRecordDate(record.activity.date)}`;
+    detail.appendChild(value);
+    detail.appendChild(when);
+    row.appendChild(metricLabel);
+    row.appendChild(detail);
+    attachTooltip(row, buildActivityTooltipLines(record.activity, units).join("\n"));
+    group.appendChild(row);
+  });
+
+  groups.appendChild(group);
+  card.appendChild(groups);
+  return card;
+}
+
+function buildDistanceHistogramCard(activities, options = {}) {
+  const units = normalizeUnits(options.units || DEFAULT_UNITS);
+  const metersPerUnit = units.distance === "km" ? 1000 : 1609.344;
+  const histogram = computeDistanceHistogram(
+    activities, metersPerUnit, HISTOGRAM_TARGET_BINS,
+  );
+  if (!histogram) {
+    return buildEmptySelectionCard();
+  }
+
+  const card = document.createElement("div");
+  card.className = "card histogram-card";
+  const body = document.createElement("div");
+  body.className = "histogram-body";
+  const chartArea = document.createElement("div");
+  chartArea.className = "histogram-chart-area";
+
+  const svgAttr = (el, attrs) => {
+    Object.entries(attrs).forEach(([name, value]) => {
+      el.setAttribute(name, String(value));
+    });
+    return el;
+  };
+
+  const layout = HISTOGRAM_CHART_LAYOUT;
+  const width = layout.left + layout.innerWidth + layout.right;
+  const height = layout.top + layout.innerHeight + layout.bottom;
+  const { bins, total, binSize } = histogram;
+  const slotWidth = layout.innerWidth / bins.length;
+  const barWidth = Math.max(2, slotWidth - layout.barGap);
+  const maxCount = bins.reduce((acc, bin) => Math.max(acc, bin.count), 0);
+  const yForCount = (count) => layout.top + layout.innerHeight
+    - (maxCount > 0 ? (count / maxCount) * layout.innerHeight : 0);
+
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svgAttr(svg, {
+    viewBox: `0 0 ${width} ${height}`,
+    width,
+    height,
+    role: "img",
+    "aria-label": "Ride distance distribution",
+  });
+  svg.classList.add("progress-svg", "histogram-svg");
+
+  // Y gridlines + integer tick labels at 25/50/75/100% of the max count.
+  [0.25, 0.5, 0.75, 1].forEach((fraction) => {
+    const count = Math.round(maxCount * fraction);
+    const y = yForCount(maxCount * fraction);
+    const line = document.createElementNS(SVG_NS, "line");
+    svgAttr(line, {
+      x1: layout.left, y1: y, x2: layout.left + layout.innerWidth, y2: y,
+      class: "progress-gridline",
+    });
+    svg.appendChild(line);
+    const label = document.createElementNS(SVG_NS, "text");
+    svgAttr(label, {
+      x: layout.left - 6, y: y + 3,
+      class: "progress-axis-label progress-axis-label-y",
+    });
+    label.textContent = String(count);
+    svg.appendChild(label);
+  });
+
+  const labelStride = bins.length > 8 ? 2 : 1;
+  bins.forEach((bin) => {
+    const x = layout.left + bin.index * slotWidth;
+    if (bin.count > 0) {
+      const y = yForCount(bin.count);
+      const bar = document.createElementNS(SVG_NS, "rect");
+      svgAttr(bar, {
+        x: (x + layout.barGap / 2).toFixed(1),
+        y: y.toFixed(1),
+        width: barWidth.toFixed(1),
+        height: Math.max(1, layout.top + layout.innerHeight - y).toFixed(1),
+        rx: 2,
+        class: "histogram-bar",
+      });
+      svg.appendChild(bar);
+    }
+    if (bin.index % labelStride === 0) {
+      const label = document.createElementNS(SVG_NS, "text");
+      svgAttr(label, {
+        x, y: layout.top + layout.innerHeight + 14,
+        class: "progress-axis-label histogram-axis-label",
+      });
+      label.textContent = String(bin.from);
+      svg.appendChild(label);
+    }
+    const share = total > 0 ? Math.round((bin.count / total) * 100) : 0;
+    const tooltipLines = [
+      `${bin.from}–${bin.to} ${units.distance}`,
+      `${bin.count === 1 ? "1 activity" : `${bin.count} activities`} (${share}%)`,
+    ];
+    const hover = document.createElementNS(SVG_NS, "rect");
+    svgAttr(hover, {
+      x: x.toFixed(1),
+      y: layout.top,
+      width: slotWidth.toFixed(1),
+      height: layout.innerHeight,
+      class: "progress-hover-strip",
+    });
+    attachTooltip(hover, tooltipLines.join("\n"));
+    svg.appendChild(hover);
+  });
+
+  // Axis unit label at the right edge.
+  const unitLabel = document.createElementNS(SVG_NS, "text");
+  svgAttr(unitLabel, {
+    x: layout.left + layout.innerWidth,
+    y: layout.top + layout.innerHeight + 14,
+    class: "progress-axis-label histogram-axis-label",
+  });
+  unitLabel.textContent = units.distance;
+  svg.appendChild(unitLabel);
+
+  chartArea.appendChild(svg);
+  body.appendChild(chartArea);
+  card.appendChild(body);
+  return card;
+}
+
+function buildScatterCard(activities, options = {}) {
+  const units = normalizeUnits(options.units || DEFAULT_UNITS);
+  const points = (Array.isArray(activities) ? activities : [])
+    .filter((activity) => activityMetricValue(activity, "distance") > 0);
+  if (!points.length) {
+    return buildEmptySelectionCard();
+  }
+
+  const card = document.createElement("div");
+  card.className = "card scatter-card";
+  const body = document.createElement("div");
+  body.className = "scatter-body";
+  const chartArea = document.createElement("div");
+  chartArea.className = "scatter-chart-area";
+  const legend = document.createElement("div");
+  legend.className = "progress-legend scatter-legend";
+
+  const svgAttr = (el, attrs) => {
+    Object.entries(attrs).forEach(([name, value]) => {
+      el.setAttribute(name, String(value));
+    });
+    return el;
+  };
+
+  const layout = SCATTER_CHART_LAYOUT;
+  const width = layout.left + layout.innerWidth + layout.right;
+  const height = layout.top + layout.innerHeight + layout.bottom;
+  const xMax = points.reduce(
+    (acc, activity) => Math.max(acc, activityMetricValue(activity, "distance")), 0,
+  );
+  const yMax = points.reduce(
+    (acc, activity) => Math.max(acc, activityMetricValue(activity, "elevation_gain")), 0,
+  );
+  const xForValue = (value) => layout.left
+    + (xMax > 0 ? (value / xMax) * layout.innerWidth : 0);
+  const yForValue = (value) => layout.top + layout.innerHeight
+    - (yMax > 0 ? (value / yMax) * layout.innerHeight : 0);
+
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svgAttr(svg, {
+    viewBox: `0 0 ${width} ${height}`,
+    width,
+    height,
+    role: "img",
+    "aria-label": "Distance vs elevation per activity",
+  });
+  svg.classList.add("progress-svg", "scatter-svg");
+
+  // Gridlines + tick labels at 25/50/75/100% on both axes.
+  [0.25, 0.5, 0.75, 1].forEach((fraction) => {
+    const yValue = yMax * fraction;
+    const y = yForValue(yValue);
+    const yLine = document.createElementNS(SVG_NS, "line");
+    svgAttr(yLine, {
+      x1: layout.left, y1: y, x2: layout.left + layout.innerWidth, y2: y,
+      class: "progress-gridline",
+    });
+    svg.appendChild(yLine);
+    const yLabel = document.createElementNS(SVG_NS, "text");
+    svgAttr(yLabel, {
+      x: layout.left - 6, y: y + 3,
+      class: "progress-axis-label progress-axis-label-y",
+    });
+    yLabel.textContent = formatProgressTick("elevation_gain", yValue, units);
+    svg.appendChild(yLabel);
+
+    const xValue = xMax * fraction;
+    const x = xForValue(xValue);
+    const xLine = document.createElementNS(SVG_NS, "line");
+    svgAttr(xLine, {
+      x1: x, y1: layout.top, x2: x, y2: layout.top + layout.innerHeight,
+      class: "progress-gridline",
+    });
+    svg.appendChild(xLine);
+    const xLabel = document.createElementNS(SVG_NS, "text");
+    svgAttr(xLabel, {
+      x, y: layout.top + layout.innerHeight + 14,
+      class: "progress-axis-label scatter-axis-label",
+    });
+    xLabel.textContent = formatProgressTick("distance", xValue, units);
+    svg.appendChild(xLabel);
+  });
+
+  const typesSeen = [];
+  points.forEach((activity) => {
+    const distance = activityMetricValue(activity, "distance");
+    const elevation = activityMetricValue(activity, "elevation_gain");
+    const color = getColors(activity.type)[4];
+    if (!typesSeen.some((entry) => entry.type === activity.type)) {
+      typesSeen.push({ type: activity.type, color });
+    }
+    const dot = document.createElementNS(SVG_NS, "circle");
+    svgAttr(dot, {
+      cx: xForValue(distance).toFixed(1),
+      cy: yForValue(elevation).toFixed(1),
+      r: 3.5,
+      fill: color,
+      class: "scatter-dot",
+    });
+    attachTooltip(dot, buildActivityTooltipLines(activity, units).join("\n"));
+    svg.appendChild(dot);
+  });
+
+  chartArea.appendChild(svg);
+
+  if (typesSeen.length > 1) {
+    typesSeen.forEach((entry) => {
+      const item = document.createElement("div");
+      item.className = "progress-legend-item";
+      const dot = document.createElement("span");
+      dot.className = "progress-legend-dot";
+      dot.style.background = entry.color;
+      const text = document.createElement("span");
+      text.textContent = displayType(entry.type);
+      item.appendChild(dot);
+      item.appendChild(text);
+      legend.appendChild(item);
+    });
+  }
+
+  body.appendChild(chartArea);
+  body.appendChild(legend);
+  card.appendChild(body);
+  return card;
+}
+
 function buildSeasonalityCard(payload, types, years, options = {}) {
   const units = normalizeUnits(options.units || payload.units || DEFAULT_UNITS);
   const onStateChange = typeof options.onStateChange === "function"
@@ -7519,6 +7929,45 @@ async function init() {
             ),
           );
           list.appendChild(ratioPairRow);
+          const activityList = getFilteredActivities(payload, types, cardYears);
+          if (activitiesHaveMetrics(activityList)) {
+            const rideRecordsCard = buildActivityRecordsCard(activityList, {
+              units: currentUnits,
+            });
+            setCardScrollKey(rideRecordsCard, `${combinedSelectionKey}:activity-records`);
+            const histogramCard = buildDistanceHistogramCard(activityList, {
+              units: currentUnits,
+            });
+            setCardScrollKey(histogramCard, `${combinedSelectionKey}:histogram`);
+            const activityPairRow = document.createElement("div");
+            activityPairRow.className = "labeled-card-row-pair";
+            activityPairRow.appendChild(
+              buildLabeledCardRow(
+                "Ride Records",
+                rideRecordsCard,
+                "activity-records",
+              ),
+            );
+            activityPairRow.appendChild(
+              buildLabeledCardRow(
+                "Distance Distribution",
+                histogramCard,
+                "histogram",
+              ),
+            );
+            list.appendChild(activityPairRow);
+            const scatterCard = buildScatterCard(activityList, {
+              units: currentUnits,
+            });
+            setCardScrollKey(scatterCard, `${combinedSelectionKey}:scatter`);
+            list.appendChild(
+              buildLabeledCardRow(
+                "Distance vs Elevation",
+                scatterCard,
+                "scatter",
+              ),
+            );
+          }
         }
         cardYears.forEach((year) => {
           const yearData = payload.aggregates?.[String(year)] || {};
@@ -7701,6 +8150,45 @@ async function init() {
               ),
             );
             list.appendChild(ratioPairRow);
+            const activityList = getFilteredActivities(payload, [type], cardYears);
+            if (activitiesHaveMetrics(activityList)) {
+              const rideRecordsCard = buildActivityRecordsCard(activityList, {
+                units: currentUnits,
+              });
+              setCardScrollKey(rideRecordsCard, `${typeCardKey}:activity-records`);
+              const histogramCard = buildDistanceHistogramCard(activityList, {
+                units: currentUnits,
+              });
+              setCardScrollKey(histogramCard, `${typeCardKey}:histogram`);
+              const activityPairRow = document.createElement("div");
+              activityPairRow.className = "labeled-card-row-pair";
+              activityPairRow.appendChild(
+                buildLabeledCardRow(
+                  "Ride Records",
+                  rideRecordsCard,
+                  "activity-records",
+                ),
+              );
+              activityPairRow.appendChild(
+                buildLabeledCardRow(
+                  "Distance Distribution",
+                  histogramCard,
+                  "histogram",
+                ),
+              );
+              list.appendChild(activityPairRow);
+              const scatterCard = buildScatterCard(activityList, {
+                units: currentUnits,
+              });
+              setCardScrollKey(scatterCard, `${typeCardKey}:scatter`);
+              list.appendChild(
+                buildLabeledCardRow(
+                  "Distance vs Elevation",
+                  scatterCard,
+                  "scatter",
+                ),
+              );
+            }
           }
           cardYears.forEach((year) => {
             const aggregates = payload.aggregates?.[String(year)]?.[type] || {};
