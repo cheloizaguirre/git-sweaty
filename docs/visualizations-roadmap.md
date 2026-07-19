@@ -1,6 +1,6 @@
 # Visualizations Roadmap & Session Status
 
-Status record for the aggregate-visualization work. Last updated: 2026-07-18.
+Status record for the aggregate-visualization work. Last updated: 2026-07-19.
 
 ## Ground rules (unchanged throughout)
 
@@ -17,6 +17,7 @@ Status record for the aggregate-visualization work. Last updated: 2026-07-18.
 | `9944796` | **Trends card** — weekly/monthly/yearly bar charts (granularity + metric chips, one row per year, stacked type segments) |
 | `20ff791` | **Cumulative Progress card** — year-over-year cumulative SVG line chart, paired side-by-side with Trends; rail widened to 1250px |
 | `30d4f2c` | **Records card** — best day/week/month per metric (stateless) |
+| `26333b9` | **Training Load card** — rolling 7-day total + 28-day avg (÷4) lines on a continuous epoch-day timeline, full-width row below Records |
 
 Key code locations in `site/app.js`:
 
@@ -26,11 +27,17 @@ Key code locations in `site/app.js`:
 - `buildTrendsCard`, `buildProgressCard`, `buildRecordsCard` — card builders,
   modeled on `buildStatsOverview` (the Activity Frequency card).
 - `buildCumulativeSeriesByYear`, `computeRecords` — pure computation helpers.
+- `loadEpochDay` / `loadDateFromEpochDay` / `computeRollingLoadSeries` —
+  epoch-day timeline + sliding-window rolling totals; `buildLoadCard` renders
+  it (reuses `progress-gridline` / `progress-axis-label` /
+  `progress-hover-strip` / `progress-legend*` CSS; only line + container
+  styles are load-specific).
 - Wiring: both branches of `update()` (combined-types and single-type) append,
   after the Activity Frequency row: a `.labeled-card-row-pair` flex container
-  holding Trends + Cumulative Progress, then the Records row.
+  holding Trends + Cumulative Progress, then the Records row, then the
+  Training Load row.
 - State: `selectedTrendsGranularity`, `selectedTrendsMetricKey`,
-  `selectedProgressMetricKey` in `init()`; persisted only on chip clicks
+  `selectedProgressMetricKey`, `selectedLoadMetricKey` in `init()`; persisted only on chip clicks
   (`source === "card"`), included in `isDefaultFilterState()` and Reset All.
 
 Conventions established:
@@ -66,18 +73,15 @@ Conventions established:
 
 ## Remaining backlog (from the original plan, in suggested order)
 
-1. **Rolling 7-day / 28-day load** — rolling distance/time line chart
-   (training-load proxy). Client-side from daily aggregates; can reuse the
-   progress card's SVG approach.
-2. **Streaks & gaps** — longest/current active-day streak, longest break;
+1. **Streaks & gaps** — longest/current active-week streak, longest break (in days);
    possibly a streak highlight on existing heatmaps.
-3. **Seasonality profile** — average volume per calendar month across years.
-4. **Hilliness trend** — elevation gain per km by month.
-5. **Average speed trend** — distance ÷ moving time per week/month.
-6. **Indoor/outdoor share** — Ride vs VirtualRide share per month
-   (stacked area).
-7. **Start-hour × weekday punch card** — refinement of the hour matrix.
-8. *(Requires small pipeline change — still no workflow/data changes:)* add
+2. **Seasonality profile** — average volume per calendar month across years.
+3. **Hilliness trend** — elevation gain per km by month.
+4. **Average speed trend** — distance ÷ moving time per week/month.
+5. **Indoor/outdoor share** — Ride vs VirtualRide share per month
+   (stacked area). REJECTED: user is not interested in this card
+6. **Start-hour × weekday punch card** — refinement of the hour matrix. REJECTED: user is not interested in this card
+7. *(Requires small pipeline change — still no workflow/data changes:)* add
    `distance`/`moving_time`/`elevation_gain` to `activities[]` items in
    `generate_heatmaps.py::_load_activities` to enable per-activity records
    (longest single ride, distribution histogram) and a distance-vs-elevation
@@ -88,3 +92,8 @@ Conventions established:
 - 2026-07-18: Trends, Cumulative Progress (side-by-side pair, wider rail),
   and Records cards implemented, tested, and committed. All work verified in
   the dev dashboard by Marcelo. Nothing pushed yet as of this writing.
+- 2026-07-19: Training Load card (`26333b9`) implemented, tested (14 contract
+  tests, harness 25/25 incl. independent rolling-total recomputation), and
+  committed after Marcelo's dashboard review. Marcelo rejected the
+  indoor/outdoor share and punch card backlog items and redefined streaks as
+  active-week streaks with breaks in days. Next up: Streaks & gaps.
