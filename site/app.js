@@ -2484,6 +2484,18 @@ const LOAD_CHART_LAYOUT = Object.freeze({
 // Show month gridlines/labels only when the selected span is short enough
 // for them to be legible; beyond this we fall back to year boundaries.
 const LOAD_MONTH_LABEL_MAX_DAYS = 430;
+const SEASONALITY_DEFAULT_METRIC_KEY = "distance";
+// 12 bars; svg width = left + 12*barWidth + 11*barGap + right = 466px, so
+// the Seasonality card pairs with Streaks & Gaps inside the 1250px rail.
+const SEASONALITY_CHART_LAYOUT = Object.freeze({
+  barWidth: 24,
+  barGap: 10,
+  innerHeight: 150,
+  left: 56,
+  right: 12,
+  top: 10,
+  bottom: 20,
+});
 const SVG_NS = "http://www.w3.org/2000/svg";
 const METRIC_LABEL_BY_KEY = Object.freeze({
   [ACTIVE_DAYS_METRIC_KEY]: "Active Days",
@@ -4206,6 +4218,54 @@ function computeRollingLoadSeries(aggregates, types, years, metricKey, options =
     });
   }
   return { firstDay, lastDay, shortWindow, longWindow, points };
+}
+
+function computeSeasonalityProfile(aggregates, types, years, metricKey) {
+  const typeList = Array.isArray(types) ? types : [];
+  const yearList = Array.isArray(years) ? years : [];
+
+  // One instance per (year, calendar month) with its activity count and
+  // metric total across the selected types.
+  const instances = new Map();
+  yearList.forEach((year) => {
+    const yearData = aggregates?.[String(year)] || {};
+    typeList.forEach((type) => {
+      Object.entries(yearData?.[type] || {}).forEach(([dateStr, entry]) => {
+        const monthIndex = Number(String(dateStr).slice(5, 7)) - 1;
+        if (!Number.isFinite(monthIndex) || monthIndex < 0 || monthIndex > 11) return;
+        const key = `${year}:${monthIndex}`;
+        let instance = instances.get(key);
+        if (!instance) {
+          instance = { year: Number(year), monthIndex, count: 0, value: 0 };
+          instances.set(key, instance);
+        }
+        instance.count += Number(entry?.count || 0);
+        instance.value += progressMetricEntryValue(entry, metricKey);
+      });
+    });
+  });
+
+  // Active-month averaging: a month-instance participates only if it had at
+  // least one activity, so inactive years don't drag averages toward zero.
+  const months = Array.from({ length: 12 }, (_, monthIndex) => ({
+    monthIndex,
+    average: 0,
+    total: 0,
+    activeYearCount: 0,
+    perYear: [],
+  }));
+  instances.forEach((instance) => {
+    if (instance.count <= 0) return;
+    const month = months[instance.monthIndex];
+    month.total += instance.value;
+    month.activeYearCount += 1;
+    month.perYear.push({ year: instance.year, value: instance.value });
+  });
+  months.forEach((month) => {
+    month.average = month.activeYearCount > 0 ? month.total / month.activeYearCount : 0;
+    month.perYear.sort((a, b) => b.year - a.year);
+  });
+  return months;
 }
 
 function streakWeekStartEpochDay(epochDay, weekStart) {
@@ -5933,6 +5993,217 @@ function buildRecordsCard(payload, types, years, options = {}) {
   return card;
 }
 
+function buildSeasonalityCard(payload, types, years, options = {}) {
+  const units = normalizeUnits(options.units || payload.units || DEFAULT_UNITS);
+  const onStateChange = typeof options.onStateChange === "function"
+    ? options.onStateChange
+    : null;
+  const typeList = Array.isArray(types) ? types : [];
+  const yearsList = Array.isArray(years) ? years : [];
+  const aggregates = payload.aggregates || {};
+
+  const yearlyBuckets = bucketAggregatesByPeriod(aggregates, typeList, yearsList, "yearly", "sunday");
+  const totals = yearlyBuckets.reduce((acc, bucket) => {
+    acc.count += bucket.count;
+    acc.distance += bucket.distance;
+    acc.moving_time += bucket.moving_time;
+    acc.elevation_gain += bucket.elevation_gain;
+    return acc;
+  }, { count: 0, distance: 0, moving_time: 0, elevation_gain: 0 });
+
+  const metricItems = TRENDS_METRIC_ITEMS.map((item) => ({
+    key: item.key,
+    label: item.label,
+    filterable: Number(totals[item.key] || 0) > 0,
+  }));
+  const filterableMetricKeys = getFilterableKeys(metricItems);
+
+  let activeMetricKey = null;
+  const reportState = (source) => {
+    if (!onStateChange) return;
+    onStateChange({
+      metricKey: activeMetricKey,
+      filterableMetricKeys: filterableMetricKeys.slice(),
+      source,
+    });
+  };
+
+  if (totals.count <= 0 || !yearsList.length) {
+    reportState("init");
+    return buildEmptySelectionCard();
+  }
+  const requestedMetricKey = typeof options.initialMetricKey === "string"
+    ? options.initialMetricKey
+    : null;
+  if (requestedMetricKey && filterableMetricKeys.includes(requestedMetricKey)) {
+    activeMetricKey = requestedMetricKey;
+  } else if (filterableMetricKeys.includes(SEASONALITY_DEFAULT_METRIC_KEY)) {
+    activeMetricKey = SEASONALITY_DEFAULT_METRIC_KEY;
+  } else {
+    activeMetricKey = filterableMetricKeys[0] || "count";
+  }
+
+  const card = document.createElement("div");
+  card.className = "card seasonality-card";
+
+  const body = document.createElement("div");
+  body.className = "seasonality-body";
+
+  const controls = document.createElement("div");
+  controls.className = "trends-controls";
+  const metricChipRow = document.createElement("div");
+  metricChipRow.className = "trends-chip-group seasonality-metric-chips";
+
+  const chartArea = document.createElement("div");
+  chartArea.className = "seasonality-chart-area";
+
+  const metricButtons = new Map();
+  const renderMetricButtonState = () => renderSingleSelectButtonState(
+    metricItems,
+    metricButtons,
+    activeMetricKey,
+  );
+
+  const svgAttr = (el, attrs) => {
+    Object.entries(attrs).forEach(([name, value]) => {
+      el.setAttribute(name, String(value));
+    });
+    return el;
+  };
+
+  const renderSeasonalityChart = () => {
+    chartArea.innerHTML = "";
+    const layout = SEASONALITY_CHART_LAYOUT;
+    const innerWidth = 12 * layout.barWidth + 11 * layout.barGap;
+    const width = layout.left + innerWidth + layout.right;
+    const height = layout.top + layout.innerHeight + layout.bottom;
+
+    const months = computeSeasonalityProfile(aggregates, typeList, yearsList, activeMetricKey);
+    const metricLabel = TRENDS_METRIC_ITEMS.find((item) => item.key === activeMetricKey)?.label
+      || "Metric";
+    const yMax = months.reduce((acc, month) => Math.max(acc, month.average), 0);
+    const yForValue = (value) => layout.top + layout.innerHeight
+      - (yMax > 0 ? (value / yMax) * layout.innerHeight : 0);
+
+    const svg = document.createElementNS(SVG_NS, "svg");
+    svgAttr(svg, {
+      viewBox: `0 0 ${width} ${height}`,
+      width,
+      height,
+      role: "img",
+      "aria-label": `Average ${metricLabel} per calendar month`,
+    });
+    svg.classList.add("progress-svg", "seasonality-svg");
+
+    // Y gridlines + tick labels at 25/50/75/100%.
+    [0.25, 0.5, 0.75, 1].forEach((fraction) => {
+      const value = yMax * fraction;
+      const y = yForValue(value);
+      const line = document.createElementNS(SVG_NS, "line");
+      svgAttr(line, {
+        x1: layout.left, y1: y, x2: layout.left + innerWidth, y2: y,
+        class: "progress-gridline",
+      });
+      svg.appendChild(line);
+      const label = document.createElementNS(SVG_NS, "text");
+      svgAttr(label, {
+        x: layout.left - 6, y: y + 3,
+        class: "progress-axis-label progress-axis-label-y",
+      });
+      label.textContent = formatProgressTick(activeMetricKey, value, units);
+      svg.appendChild(label);
+    });
+
+    months.forEach((month) => {
+      const x = layout.left + month.monthIndex * (layout.barWidth + layout.barGap);
+      if (month.average > 0) {
+        const y = yForValue(month.average);
+        const bar = document.createElementNS(SVG_NS, "rect");
+        svgAttr(bar, {
+          x,
+          y: y.toFixed(1),
+          width: layout.barWidth,
+          height: Math.max(1, layout.top + layout.innerHeight - y).toFixed(1),
+          rx: 2,
+          class: "seasonality-bar",
+        });
+        svg.appendChild(bar);
+      }
+      const label = document.createElementNS(SVG_NS, "text");
+      svgAttr(label, {
+        x: x + layout.barWidth / 2,
+        y: layout.top + layout.innerHeight + 14,
+        class: "progress-axis-label seasonality-month-label",
+      });
+      label.textContent = MONTHS[month.monthIndex];
+      svg.appendChild(label);
+
+      const tooltipLines = [MONTHS[month.monthIndex]];
+      if (month.activeYearCount > 0) {
+        tooltipLines.push(
+          `Avg: ${formatTrendsMetricValue(activeMetricKey, month.average, units)}`
+            + ` over ${month.activeYearCount === 1 ? "1 active year" : `${month.activeYearCount} active years`}`,
+        );
+        month.perYear.forEach((entry) => {
+          tooltipLines.push(
+            `${entry.year}: ${formatTrendsMetricValue(activeMetricKey, entry.value, units)}`,
+          );
+        });
+      } else {
+        tooltipLines.push("No activity in the current selection.");
+      }
+      const hover = document.createElementNS(SVG_NS, "rect");
+      svgAttr(hover, {
+        x: x - layout.barGap / 2,
+        y: layout.top,
+        width: layout.barWidth + layout.barGap,
+        height: layout.innerHeight,
+        class: "progress-hover-strip",
+      });
+      attachTooltip(hover, tooltipLines.join("\n"));
+      svg.appendChild(hover);
+    });
+
+    chartArea.appendChild(svg);
+  };
+
+  metricItems.forEach((item) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "more-stats-metric-chip trends-chip";
+    chip.textContent = item.label;
+    chip.setAttribute("aria-disabled", item.filterable ? "false" : "true");
+    chip.setAttribute("aria-pressed", "false");
+    if (item.filterable) {
+      chip.addEventListener("click", () => {
+        if (activeMetricKey === item.key) return;
+        activeMetricKey = item.key;
+        renderMetricButtonState();
+        renderSeasonalityChart();
+        reportState("card");
+      });
+    } else {
+      const unavailableReason = getFrequencyMetricUnavailableReason(item.key, item.label);
+      chip.classList.add("is-unavailable");
+      chip.title = unavailableReason;
+      chip.setAttribute("aria-label", `${item.label} unavailable. ${unavailableReason}`);
+      attachTooltip(chip, unavailableReason);
+    }
+    metricButtons.set(item.key, chip);
+    metricChipRow.appendChild(chip);
+  });
+
+  renderMetricButtonState();
+  renderSeasonalityChart();
+  reportState("init");
+
+  controls.appendChild(metricChipRow);
+  body.appendChild(controls);
+  body.appendChild(chartArea);
+  card.appendChild(body);
+  return card;
+}
+
 function formatStreakEpochDate(epochDay) {
   const date = loadDateFromEpochDay(epochDay);
   return `${MONTHS[date.getUTCMonth()]} ${date.getUTCDate()}, ${date.getUTCFullYear()}`;
@@ -6239,6 +6510,7 @@ async function init() {
   let selectedTrendsMetricKey = TRENDS_DEFAULT_METRIC_KEY;
   let selectedProgressMetricKey = PROGRESS_DEFAULT_METRIC_KEY;
   let selectedLoadMetricKey = LOAD_DEFAULT_METRIC_KEY;
+  let selectedSeasonalityMetricKey = SEASONALITY_DEFAULT_METRIC_KEY;
 
   const onProgressStateChange = ({ metricKey, source }) => {
     if (source !== "card") return;
@@ -6262,6 +6534,18 @@ async function init() {
 
   function isDefaultLoadState() {
     return selectedLoadMetricKey === LOAD_DEFAULT_METRIC_KEY;
+  }
+
+  const onSeasonalityStateChange = ({ metricKey, source }) => {
+    if (source !== "card") return;
+    selectedSeasonalityMetricKey = TRENDS_METRIC_ITEMS.some((item) => item.key === metricKey)
+      ? metricKey
+      : SEASONALITY_DEFAULT_METRIC_KEY;
+    syncResetAllButtonState();
+  };
+
+  function isDefaultSeasonalityState() {
+    return selectedSeasonalityMetricKey === SEASONALITY_DEFAULT_METRIC_KEY;
   }
 
   const onTrendsStateChange = ({ granularity, metricKey, source }) => {
@@ -6299,7 +6583,8 @@ async function init() {
       && !hasAnyFrequencyMetricSelection()
       && isDefaultTrendsState()
       && isDefaultProgressState()
-      && isDefaultLoadState();
+      && isDefaultLoadState()
+      && isDefaultSeasonalityState();
   }
 
   function syncResetAllButtonState() {
@@ -6746,17 +7031,33 @@ async function init() {
               "load",
             ),
           );
+          const seasonalityCard = buildSeasonalityCard(payload, types, cardYears, {
+            units: currentUnits,
+            initialMetricKey: selectedSeasonalityMetricKey,
+            onStateChange: onSeasonalityStateChange,
+          });
+          setCardScrollKey(seasonalityCard, `${combinedSelectionKey}:seasonality`);
           const streaksCard = buildStreaksCard(payload, types, cardYears, {
             weekStart: setupWeekStart,
           });
           setCardScrollKey(streaksCard, `${combinedSelectionKey}:streaks`);
-          list.appendChild(
+          const statsPairRow = document.createElement("div");
+          statsPairRow.className = "labeled-card-row-pair";
+          statsPairRow.appendChild(
+            buildLabeledCardRow(
+              "Seasonality",
+              seasonalityCard,
+              "seasonality",
+            ),
+          );
+          statsPairRow.appendChild(
             buildLabeledCardRow(
               "Streaks & Gaps",
               streaksCard,
               "streaks",
             ),
           );
+          list.appendChild(statsPairRow);
         }
         cardYears.forEach((year) => {
           const yearData = payload.aggregates?.[String(year)] || {};
@@ -6887,17 +7188,33 @@ async function init() {
                 "load",
               ),
             );
+            const seasonalityCard = buildSeasonalityCard(payload, [type], cardYears, {
+              units: currentUnits,
+              initialMetricKey: selectedSeasonalityMetricKey,
+              onStateChange: onSeasonalityStateChange,
+            });
+            setCardScrollKey(seasonalityCard, `${typeCardKey}:seasonality`);
             const streaksCard = buildStreaksCard(payload, [type], cardYears, {
               weekStart: setupWeekStart,
             });
             setCardScrollKey(streaksCard, `${typeCardKey}:streaks`);
-            list.appendChild(
+            const statsPairRow = document.createElement("div");
+            statsPairRow.className = "labeled-card-row-pair";
+            statsPairRow.appendChild(
+              buildLabeledCardRow(
+                "Seasonality",
+                seasonalityCard,
+                "seasonality",
+              ),
+            );
+            statsPairRow.appendChild(
               buildLabeledCardRow(
                 "Streaks & Gaps",
                 streaksCard,
                 "streaks",
               ),
             );
+            list.appendChild(statsPairRow);
           }
           cardYears.forEach((year) => {
             const aggregates = payload.aggregates?.[String(year)]?.[type] || {};
@@ -7108,6 +7425,7 @@ async function init() {
       selectedTrendsMetricKey = TRENDS_DEFAULT_METRIC_KEY;
       selectedProgressMetricKey = PROGRESS_DEFAULT_METRIC_KEY;
       selectedLoadMetricKey = LOAD_DEFAULT_METRIC_KEY;
+      selectedSeasonalityMetricKey = SEASONALITY_DEFAULT_METRIC_KEY;
       hoverClearedSummaryType = null;
       hoverClearedSummaryYearMetricKey = null;
       update({

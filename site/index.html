@@ -1193,6 +1193,41 @@
         grid-template-columns: 110px max-content;
       }
 
+      .labeled-card-row-seasonality > .card {
+        width: max-content;
+        max-width: 100%;
+      }
+
+      .seasonality-card {
+        display: grid;
+        grid-template-rows: auto auto;
+        row-gap: var(--labeled-card-title-gap);
+      }
+
+      .seasonality-body {
+        display: grid;
+        row-gap: var(--space-5);
+        width: max-content;
+        max-width: 100%;
+      }
+
+      .seasonality-chart-area {
+        border-radius: 6px;
+        background: rgba(15, 23, 42, 0.8);
+        padding: var(--space-3);
+        width: max-content;
+        max-width: 100%;
+      }
+
+      .seasonality-bar {
+        fill: #9b5de5;
+        opacity: 0.9;
+      }
+
+      .seasonality-month-label {
+        text-anchor: middle;
+      }
+
       .load-card {
         display: grid;
         grid-template-rows: auto auto;

@@ -253,9 +253,44 @@ The "Training Load" labeled card row renders as its own full-width row below
    labels, hover strips, legend); only the line and card container styles are
    load-specific.
 
+## Seasonality Card
+
+The "Seasonality" labeled card row renders side by side with "Streaks & Gaps"
+in a shared `.labeled-card-row-pair` container (`statsPairRow`) below
+"Training Load" in both the combined-types branch and the single-type branch
+of `update()`.
+
+### Chip behavior (`buildSeasonalityCard`)
+
+1. Metric chips (`Activities | Distance | Time | Elevation`) are single-select
+   with always exactly one active; clicking the active chip is a no-op.
+   Unavailable metrics follow the shared unavailable-chip treatment.
+2. Default metric is `Distance`, falling back to the first available metric
+   without overwriting the stored selection.
+3. Chip clicks rerender only the seasonality chart, never the full dashboard.
+4. The selection persists across type/year filter changes and unit toggles via
+   `selectedSeasonalityMetricKey`; only chip clicks (`source === "card"`)
+   update stored state. `Reset All` restores the default and non-default
+   state enables the button (`isDefaultSeasonalityState`).
+
+### Chart behavior
+
+1. `computeSeasonalityProfile` groups daily aggregates into (year, calendar
+   month) instances and averages the active ones only: a month-instance
+   participates when it has an activity count > 0, so inactive years (e.g. a
+   multi-year hiatus) don't drag averages toward zero.
+2. Twelve bars (Jan–Dec) show the average of the active metric per active
+   year; months with no active instance show no bar. Y ticks sit at
+   25/50/75/100% of the maximum average in the active units.
+3. Per-month hover strips show the average, the active-year count, and a
+   per-year breakdown (newest first) via the shared tooltip system.
+4. The chart reuses the shared progress chart SVG styles; only the bar and
+   card container styles are seasonality-specific.
+
 ## Streaks & Gaps Card
 
-The "Streaks & Gaps" labeled card row renders below "Training Load" in both
+The "Streaks & Gaps" labeled card row renders paired with "Seasonality" below
+"Training Load" in both
 the combined-types branch and the single-type branch of `update()`. The card
 is stateless: it has no chips or selections, so it does not participate in
 `Reset All`. It reuses the Records card styles (`records-card`,
