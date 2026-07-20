@@ -2,1365 +2,1960 @@
   "activities": [
     {
       "date": "2014-03-30",
+      "distance": 5471.1,
+      "elevation_gain": 66.9,
       "hour": 16,
+      "moving_time": 1668.0,
       "subtype": "Ride",
       "type": "Ride",
       "year": 2014
     },
     {
       "date": "2023-02-07",
+      "distance": 13010.4,
+      "elevation_gain": 102.0,
       "hour": 16,
+      "moving_time": 2477.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-02-14",
+      "distance": 10884.2,
+      "elevation_gain": 209.0,
       "hour": 20,
+      "moving_time": 2713.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-02-21",
+      "distance": 14014.5,
+      "elevation_gain": 76.0,
       "hour": 15,
+      "moving_time": 2407.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-02-23",
+      "distance": 14925.8,
+      "elevation_gain": 68.0,
       "hour": 17,
+      "moving_time": 2436.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-03-28",
+      "distance": 11916.9,
+      "elevation_gain": 106.0,
       "hour": 18,
+      "moving_time": 2331.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-04-18",
+      "distance": 10227.7,
+      "elevation_gain": 137.0,
       "hour": 17,
+      "moving_time": 1903.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-04-23",
+      "distance": 7505.0,
+      "elevation_gain": 80.0,
       "hour": 16,
+      "moving_time": 1229.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-06-13",
+      "distance": 9009.5,
+      "elevation_gain": 95.0,
       "hour": 15,
+      "moving_time": 1505.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-06-27",
+      "distance": 7679.8,
+      "elevation_gain": 24.0,
       "hour": 16,
+      "moving_time": 1417.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-06-27",
+      "distance": 10779.2,
+      "elevation_gain": 61.0,
       "hour": 17,
+      "moving_time": 2312.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-07-04",
+      "distance": 10042.3,
+      "elevation_gain": 102.0,
       "hour": 16,
+      "moving_time": 1864.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-07-09",
+      "distance": 11321.5,
+      "elevation_gain": 227.0,
       "hour": 17,
+      "moving_time": 2681.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-07-11",
+      "distance": 22287.8,
+      "elevation_gain": 111.0,
       "hour": 16,
+      "moving_time": 3615.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-07-15",
+      "distance": 20430.0,
+      "elevation_gain": 89.0,
       "hour": 17,
+      "moving_time": 2716.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-07-18",
+      "distance": 23343.0,
+      "elevation_gain": 85.0,
       "hour": 16,
+      "moving_time": 3383.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-07-22",
+      "distance": 13903.0,
+      "elevation_gain": 102.0,
       "hour": 16,
+      "moving_time": 3264.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-08-04",
+      "distance": 19781.0,
+      "elevation_gain": 32.0,
       "hour": 15,
+      "moving_time": 2855.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-08-07",
+      "distance": 24436.5,
+      "elevation_gain": 133.0,
       "hour": 16,
+      "moving_time": 3627.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-08-11",
+      "distance": 18594.6,
+      "elevation_gain": 25.0,
       "hour": 16,
+      "moving_time": 2299.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-08-11",
+      "distance": 16133.3,
+      "elevation_gain": 141.0,
       "hour": 17,
+      "moving_time": 2332.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-08-15",
+      "distance": 21002.9,
+      "elevation_gain": 59.0,
       "hour": 16,
+      "moving_time": 2847.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-08-17",
+      "distance": 15787.7,
+      "elevation_gain": 177.0,
       "hour": 16,
+      "moving_time": 2771.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-08-20",
+      "distance": 18131.5,
+      "elevation_gain": 282.0,
       "hour": 17,
+      "moving_time": 4088.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-08-25",
+      "distance": 11350.7,
+      "elevation_gain": 427.0,
       "hour": 15,
+      "moving_time": 4453.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-08-29",
+      "distance": 13233.2,
+      "elevation_gain": 50.0,
       "hour": 17,
+      "moving_time": 1965.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-09-03",
+      "distance": 8245.3,
+      "elevation_gain": 110.0,
       "hour": 15,
+      "moving_time": 1816.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-09-09",
+      "distance": 14041.3,
+      "elevation_gain": 90.0,
       "hour": 16,
+      "moving_time": 2473.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-09-12",
+      "distance": 4170.4,
+      "elevation_gain": 10.0,
       "hour": 14,
+      "moving_time": 623.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-09-12",
+      "distance": 20516.0,
+      "elevation_gain": 68.0,
       "hour": 15,
+      "moving_time": 2743.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-09-16",
+      "distance": 8198.3,
+      "elevation_gain": 38.0,
       "hour": 17,
+      "moving_time": 1122.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-09-29",
+      "distance": 15129.3,
+      "elevation_gain": 107.0,
       "hour": 14,
+      "moving_time": 2136.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-10-03",
+      "distance": 16323.7,
+      "elevation_gain": 145.0,
       "hour": 15,
+      "moving_time": 2564.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-10-07",
+      "distance": 19592.1,
+      "elevation_gain": 157.0,
       "hour": 16,
+      "moving_time": 2902.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-10-10",
+      "distance": 19475.2,
+      "elevation_gain": 59.0,
       "hour": 16,
+      "moving_time": 2369.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-10-14",
+      "distance": 30428.1,
+      "elevation_gain": 76.0,
       "hour": 15,
+      "moving_time": 3859.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-10-19",
+      "distance": 23519.6,
+      "elevation_gain": 203.0,
       "hour": 15,
+      "moving_time": 3570.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-10-22",
+      "distance": 29847.1,
+      "elevation_gain": 205.0,
       "hour": 16,
+      "moving_time": 4470.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-10-24",
+      "distance": 23653.2,
+      "elevation_gain": 171.0,
       "hour": 14,
+      "moving_time": 3907.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-10-27",
+      "distance": 22134.3,
+      "elevation_gain": 196.0,
       "hour": 17,
+      "moving_time": 3355.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-10-29",
+      "distance": 17175.9,
+      "elevation_gain": 68.0,
       "hour": 15,
+      "moving_time": 2157.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-11-11",
+      "distance": 24161.3,
+      "elevation_gain": 283.0,
       "hour": 16,
+      "moving_time": 3861.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-11-13",
+      "distance": 12101.4,
+      "elevation_gain": 157.0,
       "hour": 15,
+      "moving_time": 1904.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-11-24",
+      "distance": 32620.1,
+      "elevation_gain": 243.0,
       "hour": 15,
+      "moving_time": 5220.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-11-28",
+      "distance": 14416.2,
+      "elevation_gain": 153.0,
       "hour": 15,
+      "moving_time": 2582.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-12-01",
+      "distance": 13550.9,
+      "elevation_gain": 406.0,
       "hour": 16,
+      "moving_time": 3655.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-12-19",
+      "distance": 18957.1,
+      "elevation_gain": 71.0,
       "hour": 16,
+      "moving_time": 2665.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-12-24",
+      "distance": 19987.1,
+      "elevation_gain": 138.0,
       "hour": 17,
+      "moving_time": 3234.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2023-12-29",
+      "distance": 18686.8,
+      "elevation_gain": 172.0,
       "hour": 10,
+      "moving_time": 2739.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2023
     },
     {
       "date": "2024-01-02",
+      "distance": 37514.2,
+      "elevation_gain": 127.0,
       "hour": 16,
+      "moving_time": 5135.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2024
     },
     {
       "date": "2024-01-23",
+      "distance": 11935.6,
+      "elevation_gain": 166.0,
       "hour": 10,
+      "moving_time": 2311.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2024
     },
     {
       "date": "2024-01-25",
+      "distance": 26149.3,
+      "elevation_gain": 186.0,
       "hour": 17,
+      "moving_time": 3624.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2024
     },
     {
       "date": "2024-01-30",
+      "distance": 15502.9,
+      "elevation_gain": 184.0,
       "hour": 15,
+      "moving_time": 2537.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2024
     },
     {
       "date": "2024-06-13",
+      "distance": 970.6,
+      "elevation_gain": 4.0,
       "hour": 17,
+      "moving_time": 119.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2024
     },
     {
       "date": "2024-06-13",
+      "distance": 635.0,
+      "elevation_gain": 6.0,
       "hour": 17,
+      "moving_time": 99.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2024
     },
     {
       "date": "2024-06-13",
+      "distance": 3783.5,
+      "elevation_gain": 4.0,
       "hour": 17,
+      "moving_time": 519.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2024
     },
     {
       "date": "2024-06-13",
+      "distance": 1852.5,
+      "elevation_gain": 15.0,
       "hour": 17,
+      "moving_time": 299.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2024
     },
     {
       "date": "2024-06-19",
+      "distance": 18566.0,
+      "elevation_gain": 86.0,
       "hour": 8,
+      "moving_time": 2669.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2024
     },
     {
       "date": "2024-06-24",
+      "distance": 9910.9,
+      "elevation_gain": 100.0,
       "hour": 11,
+      "moving_time": 1876.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2024
     },
     {
       "date": "2024-07-21",
+      "distance": 11337.0,
+      "elevation_gain": 74.0,
       "hour": 16,
+      "moving_time": 1868.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2024
     },
     {
       "date": "2025-01-12",
+      "distance": 8009.5,
+      "elevation_gain": 80.0,
       "hour": 15,
+      "moving_time": 1174.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-06-05",
+      "distance": 9690.3,
+      "elevation_gain": 65.0,
       "hour": 21,
+      "moving_time": 1550.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-06-07",
+      "distance": 19739.3,
+      "elevation_gain": 176.0,
       "hour": 21,
+      "moving_time": 3412.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-06-09",
+      "distance": 15743.5,
+      "elevation_gain": 308.0,
       "hour": 17,
+      "moving_time": 3848.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-06-25",
+      "distance": 19180.6,
+      "elevation_gain": 328.0,
       "hour": 21,
+      "moving_time": 5447.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-06-28",
+      "distance": 28614.7,
+      "elevation_gain": 285.0,
       "hour": 16,
+      "moving_time": 6064.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-06-30",
+      "distance": 18472.4,
+      "elevation_gain": 157.0,
       "hour": 21,
+      "moving_time": 3633.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-07-05",
+      "distance": 25040.2,
+      "elevation_gain": 216.0,
       "hour": 16,
+      "moving_time": 5528.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-07-07",
+      "distance": 21313.6,
+      "elevation_gain": 92.0,
       "hour": 21,
+      "moving_time": 3607.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-07-12",
+      "distance": 11275.4,
+      "elevation_gain": 506.0,
       "hour": 16,
+      "moving_time": 6362.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-07-14",
+      "distance": 19125.6,
+      "elevation_gain": 99.0,
       "hour": 16,
+      "moving_time": 3018.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-07-17",
+      "distance": 17887.2,
+      "elevation_gain": 274.0,
       "hour": 16,
+      "moving_time": 5412.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-07-21",
+      "distance": 18063.6,
+      "elevation_gain": 207.0,
       "hour": 21,
+      "moving_time": 3630.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-07-24",
+      "distance": 7045.3,
+      "elevation_gain": 141.0,
       "hour": 16,
+      "moving_time": 1538.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-07-26",
+      "distance": 35679.8,
+      "elevation_gain": 278.0,
       "hour": 17,
+      "moving_time": 6429.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-07-28",
+      "distance": 18960.3,
+      "elevation_gain": 187.0,
       "hour": 21,
+      "moving_time": 3638.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-08-02",
+      "distance": 39712.0,
+      "elevation_gain": 420.0,
       "hour": 16,
+      "moving_time": 7290.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-08-04",
+      "distance": 22404.9,
+      "elevation_gain": 118.0,
       "hour": 21,
+      "moving_time": 3468.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-08-07",
+      "distance": 14069.7,
+      "elevation_gain": 382.0,
       "hour": 21,
+      "moving_time": 3841.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-08-09",
+      "distance": 40094.3,
+      "elevation_gain": 307.0,
       "hour": 16,
+      "moving_time": 7380.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-08-11",
+      "distance": 19518.4,
+      "elevation_gain": 194.0,
       "hour": 21,
+      "moving_time": 3707.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-08-15",
+      "distance": 35348.0,
+      "elevation_gain": 528.0,
       "hour": 16,
+      "moving_time": 7448.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-08-18",
+      "distance": 21423.1,
+      "elevation_gain": 222.0,
       "hour": 21,
+      "moving_time": 3514.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-08-21",
+      "distance": 7844.0,
+      "elevation_gain": 308.0,
       "hour": 20,
+      "moving_time": 3227.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-08-23",
+      "distance": 31048.1,
+      "elevation_gain": 409.0,
       "hour": 16,
+      "moving_time": 7071.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-08-25",
+      "distance": 21284.9,
+      "elevation_gain": 158.0,
       "hour": 17,
+      "moving_time": 3626.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-08-28",
+      "distance": 14283.0,
+      "elevation_gain": 63.0,
       "hour": 17,
+      "moving_time": 2111.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-08-30",
+      "distance": 39467.2,
+      "elevation_gain": 414.0,
       "hour": 16,
+      "moving_time": 7488.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-09-01",
+      "distance": 25256.9,
+      "elevation_gain": 131.0,
       "hour": 21,
+      "moving_time": 4021.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-09-04",
+      "distance": 10328.0,
+      "elevation_gain": 161.0,
       "hour": 17,
+      "moving_time": 2701.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-09-06",
+      "distance": 37981.2,
+      "elevation_gain": 570.0,
       "hour": 16,
+      "moving_time": 8270.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-09-08",
+      "distance": 15456.6,
+      "elevation_gain": 308.0,
       "hour": 21,
+      "moving_time": 3627.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-09-11",
+      "distance": 44213.3,
+      "elevation_gain": 288.0,
       "hour": 16,
+      "moving_time": 7314.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-09-15",
+      "distance": 19852.1,
+      "elevation_gain": 169.0,
       "hour": 21,
+      "moving_time": 3397.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-09-18",
+      "distance": 19709.2,
+      "elevation_gain": 89.0,
       "hour": 20,
+      "moving_time": 3001.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-09-21",
+      "distance": 39473.9,
+      "elevation_gain": 365.0,
       "hour": 16,
+      "moving_time": 7317.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-09-27",
+      "distance": 41603.1,
+      "elevation_gain": 323.0,
       "hour": 16,
+      "moving_time": 7437.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-09-29",
+      "distance": 23469.4,
+      "elevation_gain": 205.0,
       "hour": 21,
+      "moving_time": 4015.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-10-02",
+      "distance": 28837.9,
+      "elevation_gain": 419.0,
       "hour": 21,
+      "moving_time": 5258.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-10-04",
+      "distance": 42971.1,
+      "elevation_gain": 537.0,
       "hour": 15,
+      "moving_time": 7289.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-10-06",
+      "distance": 22741.9,
+      "elevation_gain": 147.0,
       "hour": 21,
+      "moving_time": 3636.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-10-09",
+      "distance": 3815.1,
+      "elevation_gain": 18.0,
       "hour": 20,
+      "moving_time": 535.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-10-09",
+      "distance": 42643.7,
+      "elevation_gain": 357.0,
       "hour": 21,
+      "moving_time": 5832.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-10-11",
+      "distance": 49166.6,
+      "elevation_gain": 376.0,
       "hour": 15,
+      "moving_time": 7286.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-10-13",
+      "distance": 17485.1,
+      "elevation_gain": 179.0,
       "hour": 20,
+      "moving_time": 3153.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-10-16",
+      "distance": 30025.4,
+      "elevation_gain": 511.0,
       "hour": 20,
+      "moving_time": 4058.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-10-19",
+      "distance": 40037.2,
+      "elevation_gain": 528.0,
       "hour": 15,
+      "moving_time": 7242.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-10-20",
+      "distance": 21178.6,
+      "elevation_gain": 236.0,
       "hour": 20,
+      "moving_time": 3482.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-10-23",
+      "distance": 35040.8,
+      "elevation_gain": 256.0,
       "hour": 21,
+      "moving_time": 4988.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-10-25",
+      "distance": 43526.3,
+      "elevation_gain": 559.0,
       "hour": 16,
+      "moving_time": 7363.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-10-27",
+      "distance": 22123.5,
+      "elevation_gain": 48.0,
       "hour": 20,
+      "moving_time": 2966.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-10-30",
+      "distance": 30471.3,
+      "elevation_gain": 263.0,
       "hour": 21,
+      "moving_time": 3636.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-11-02",
+      "distance": 48420.1,
+      "elevation_gain": 360.0,
       "hour": 16,
+      "moving_time": 7374.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-11-06",
+      "distance": 5894.9,
+      "elevation_gain": 28.0,
       "hour": 20,
+      "moving_time": 823.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-11-06",
+      "distance": 31648.4,
+      "elevation_gain": 360.0,
       "hour": 21,
+      "moving_time": 4952.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-11-08",
+      "distance": 51594.8,
+      "elevation_gain": 339.0,
       "hour": 16,
+      "moving_time": 7088.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-11-10",
+      "distance": 25778.0,
+      "elevation_gain": 193.0,
       "hour": 21,
+      "moving_time": 3654.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-11-30",
+      "distance": 20057.5,
+      "elevation_gain": 32.0,
       "hour": 20,
+      "moving_time": 2520.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-12-05",
+      "distance": 21690.0,
+      "elevation_gain": 351.0,
       "hour": 16,
+      "moving_time": 4266.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-12-11",
+      "distance": 7633.1,
+      "elevation_gain": 105.0,
       "hour": 20,
+      "moving_time": 1250.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2025-12-15",
+      "distance": 10830.5,
+      "elevation_gain": 66.0,
       "hour": 20,
+      "moving_time": 1963.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2025
     },
     {
       "date": "2026-01-03",
+      "distance": 24540.0,
+      "elevation_gain": 421.0,
       "hour": 16,
+      "moving_time": 5190.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-01-05",
+      "distance": 21219.6,
+      "elevation_gain": 186.0,
       "hour": 16,
+      "moving_time": 3726.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-01-08",
+      "distance": 34216.8,
+      "elevation_gain": 234.0,
       "hour": 15,
+      "moving_time": 5502.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-01-10",
+      "distance": 22745.9,
+      "elevation_gain": 402.0,
       "hour": 16,
+      "moving_time": 5459.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-01-12",
+      "distance": 8966.0,
+      "elevation_gain": 334.0,
       "hour": 17,
+      "moving_time": 3148.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-01-15",
+      "distance": 31029.9,
+      "elevation_gain": 337.0,
       "hour": 20,
+      "moving_time": 5473.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-01-17",
+      "distance": 36557.8,
+      "elevation_gain": 203.0,
       "hour": 15,
+      "moving_time": 5411.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-01-19",
+      "distance": 24101.0,
+      "elevation_gain": 168.0,
       "hour": 20,
+      "moving_time": 3779.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-01-22",
+      "distance": 27884.8,
+      "elevation_gain": 321.0,
       "hour": 21,
+      "moving_time": 5485.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-01-24",
+      "distance": 25329.3,
+      "elevation_gain": 370.0,
       "hour": 15,
+      "moving_time": 5430.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-01-26",
+      "distance": 22424.1,
+      "elevation_gain": 190.0,
       "hour": 20,
+      "moving_time": 3616.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-01-29",
+      "distance": 32445.7,
+      "elevation_gain": 251.0,
       "hour": 17,
+      "moving_time": 5080.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-01-31",
+      "distance": 35045.4,
+      "elevation_gain": 317.0,
       "hour": 16,
+      "moving_time": 6235.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-02-05",
+      "distance": 37262.6,
+      "elevation_gain": 295.0,
       "hour": 21,
+      "moving_time": 5653.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-02-07",
+      "distance": 31011.9,
+      "elevation_gain": 554.0,
       "hour": 15,
+      "moving_time": 6174.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-02-09",
+      "distance": 20997.4,
+      "elevation_gain": 139.0,
       "hour": 16,
+      "moving_time": 3166.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-02-15",
+      "distance": 41030.2,
+      "elevation_gain": 417.0,
       "hour": 15,
+      "moving_time": 6947.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-02-16",
+      "distance": 3123.6,
+      "elevation_gain": 14.0,
       "hour": 17,
+      "moving_time": 374.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-02-16",
+      "distance": 17579.7,
+      "elevation_gain": 140.0,
       "hour": 18,
+      "moving_time": 2227.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-02-19",
+      "distance": 31830.6,
+      "elevation_gain": 354.0,
       "hour": 17,
+      "moving_time": 4930.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-02-21",
+      "distance": 29018.8,
+      "elevation_gain": 783.0,
       "hour": 14,
+      "moving_time": 8130.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-02-22",
+      "distance": 38373.1,
+      "elevation_gain": 245.0,
       "hour": 14,
+      "moving_time": 5712.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-02-24",
+      "distance": 26134.8,
+      "elevation_gain": 238.0,
       "hour": 20,
+      "moving_time": 4215.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-02-26",
+      "distance": 35110.4,
+      "elevation_gain": 110.0,
       "hour": 21,
+      "moving_time": 4888.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-02-28",
+      "distance": 7344.1,
+      "elevation_gain": 118.0,
       "hour": 14,
+      "moving_time": 1592.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-02-28",
+      "distance": 22764.4,
+      "elevation_gain": 231.0,
       "hour": 15,
+      "moving_time": 3013.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-03-26",
+      "distance": 30289.1,
+      "elevation_gain": 329.0,
       "hour": 20,
+      "moving_time": 5414.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-03-28",
+      "distance": 47768.4,
+      "elevation_gain": 276.0,
       "hour": 15,
+      "moving_time": 6692.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-03-31",
+      "distance": 30062.8,
+      "elevation_gain": 309.0,
       "hour": 20,
+      "moving_time": 5113.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-04-04",
+      "distance": 40596.3,
+      "elevation_gain": 426.0,
       "hour": 16,
+      "moving_time": 6881.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-04-07",
+      "distance": 38709.5,
+      "elevation_gain": 212.0,
       "hour": 20,
+      "moving_time": 5494.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-04-09",
+      "distance": 35114.4,
+      "elevation_gain": 201.0,
       "hour": 16,
+      "moving_time": 5467.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-04-11",
+      "distance": 33056.0,
+      "elevation_gain": 450.0,
       "hour": 16,
+      "moving_time": 6490.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-04-14",
+      "distance": 23144.6,
+      "elevation_gain": 464.0,
       "hour": 14,
+      "moving_time": 5441.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-04-16",
+      "distance": 28227.3,
+      "elevation_gain": 308.0,
       "hour": 20,
+      "moving_time": 5015.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-04-18",
+      "distance": 25038.3,
+      "elevation_gain": 616.0,
       "hour": 15,
+      "moving_time": 6672.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-04-21",
+      "distance": 25066.1,
+      "elevation_gain": 353.0,
       "hour": 16,
+      "moving_time": 4923.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-04-23",
+      "distance": 26062.1,
+      "elevation_gain": 356.0,
       "hour": 20,
+      "moving_time": 5408.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-04-25",
+      "distance": 19685.0,
+      "elevation_gain": 800.0,
       "hour": 15,
+      "moving_time": 7341.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-04-28",
+      "distance": 30099.8,
+      "elevation_gain": 335.0,
       "hour": 20,
+      "moving_time": 5110.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-05-01",
+      "distance": 25371.7,
+      "elevation_gain": 366.0,
       "hour": 14,
+      "moving_time": 5429.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-05-05",
+      "distance": 25037.1,
+      "elevation_gain": 400.0,
       "hour": 20,
+      "moving_time": 4513.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-05-10",
+      "distance": 16029.3,
+      "elevation_gain": 348.0,
       "hour": 10,
+      "moving_time": 3374.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-05-12",
+      "distance": 29133.5,
+      "elevation_gain": 343.0,
       "hour": 20,
+      "moving_time": 5114.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-05-14",
+      "distance": 21948.4,
+      "elevation_gain": 379.0,
       "hour": 20,
+      "moving_time": 5293.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-05-16",
+      "distance": 21760.6,
+      "elevation_gain": 755.0,
       "hour": 16,
+      "moving_time": 7257.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-05-19",
+      "distance": 18440.0,
+      "elevation_gain": 514.0,
       "hour": 20,
+      "moving_time": 5424.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-05-21",
+      "distance": 28044.3,
+      "elevation_gain": 363.0,
       "hour": 16,
+      "moving_time": 5430.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-05-24",
+      "distance": 10371.0,
+      "elevation_gain": 97.0,
       "hour": 15,
+      "moving_time": 1811.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-05-24",
+      "distance": 11440.1,
+      "elevation_gain": 159.0,
       "hour": 16,
+      "moving_time": 1808.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-05-26",
+      "distance": 18865.9,
+      "elevation_gain": 568.0,
       "hour": 19,
+      "moving_time": 5989.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-05-29",
+      "distance": 15420.8,
+      "elevation_gain": 383.0,
       "hour": 16,
+      "moving_time": 3622.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-06-02",
+      "distance": 9851.5,
+      "elevation_gain": 610.0,
       "hour": 20,
+      "moving_time": 5415.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-06-06",
+      "distance": 27820.6,
+      "elevation_gain": 652.0,
       "hour": 16,
+      "moving_time": 6979.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-06-09",
+      "distance": 14477.3,
+      "elevation_gain": 701.0,
       "hour": 20,
+      "moving_time": 5835.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-06-11",
+      "distance": 22481.7,
+      "elevation_gain": 269.0,
       "hour": 16,
+      "moving_time": 3807.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-06-13",
+      "distance": 38118.9,
+      "elevation_gain": 622.0,
       "hour": 15,
+      "moving_time": 7358.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-06-15",
+      "distance": 21075.1,
+      "elevation_gain": 233.0,
       "hour": 8,
+      "moving_time": 3480.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-06-17",
+      "distance": 14405.5,
+      "elevation_gain": 329.0,
       "hour": 7,
+      "moving_time": 3497.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-06-19",
+      "distance": 24675.7,
+      "elevation_gain": 140.0,
       "hour": 16,
+      "moving_time": 3682.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-06-20",
+      "distance": 41218.4,
+      "elevation_gain": 514.0,
       "hour": 15,
+      "moving_time": 7242.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-06-22",
+      "distance": 12906.5,
+      "elevation_gain": 291.0,
       "hour": 8,
+      "moving_time": 3044.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-06-24",
+      "distance": 18026.5,
+      "elevation_gain": 323.0,
       "hour": 8,
+      "moving_time": 3492.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-06-26",
+      "distance": 27314.1,
+      "elevation_gain": 70.0,
       "hour": 16,
+      "moving_time": 3620.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-06-28",
+      "distance": 29101.5,
+      "elevation_gain": 788.0,
       "hour": 15,
+      "moving_time": 7718.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-06-30",
+      "distance": 18257.0,
+      "elevation_gain": 356.0,
       "hour": 7,
+      "moving_time": 3620.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-07-04",
+      "distance": 10372.5,
+      "elevation_gain": 579.0,
       "hour": 16,
+      "moving_time": 4811.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-07-05",
+      "distance": 24849.2,
+      "elevation_gain": 311.0,
       "hour": 15,
+      "moving_time": 4261.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-07-07",
+      "distance": 30145.0,
+      "elevation_gain": 220.0,
       "hour": 20,
+      "moving_time": 4554.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-07-09",
+      "distance": 17598.4,
+      "elevation_gain": 558.0,
       "hour": 15,
+      "moving_time": 5085.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-07-11",
+      "distance": 28811.7,
+      "elevation_gain": 213.0,
       "hour": 15,
+      "moving_time": 4531.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-07-14",
+      "distance": 28309.1,
+      "elevation_gain": 271.0,
       "hour": 17,
+      "moving_time": 4808.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-07-16",
+      "distance": 16899.1,
+      "elevation_gain": 317.0,
       "hour": 20,
+      "moving_time": 3624.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
     },
     {
       "date": "2026-07-18",
+      "distance": 31200.2,
+      "elevation_gain": 281.0,
       "hour": 15,
+      "moving_time": 4808.0,
+      "subtype": "VirtualRide",
+      "type": "VirtualRide",
+      "year": 2026
+    },
+    {
+      "date": "2026-07-19",
+      "distance": 31237.6,
+      "elevation_gain": 1059.0,
+      "hour": 14,
+      "moving_time": 8873.0,
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
@@ -3051,11 +3646,20 @@
           "distance": 31200.2,
           "elevation_gain": 281.0,
           "moving_time": 4808.0
+        },
+        "2026-07-19": {
+          "activity_ids": [
+            "19377753000"
+          ],
+          "count": 1,
+          "distance": 31237.6,
+          "elevation_gain": 1059.0,
+          "moving_time": 8873.0
         }
       }
     }
   },
-  "generated_at": "2026-07-19T04:19:11.147175+00:00",
+  "generated_at": "2026-07-20T04:33:17.172785+00:00",
   "other_bucket": "OtherSports",
   "repo": "cheloizaguirre/git-sweaty",
   "source": "strava",
@@ -3074,8 +3678,8 @@
     "VirtualRide"
   ],
   "units": {
-    "distance": "mi",
-    "elevation": "ft"
+    "distance": "km",
+    "elevation": "m"
   },
   "week_start": "sunday",
   "years": [
