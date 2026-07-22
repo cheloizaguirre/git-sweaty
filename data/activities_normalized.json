@@ -2546,5 +2546,18 @@
     "start_date_local": "2026-07-19T14:59:36Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-07-21",
+    "distance": 27469.1,
+    "elevation_gain": 219.0,
+    "id": "19407678073",
+    "moving_time": 4354.0,
+    "name": "Zwift - JOIN: Race the Clock \u2013 Short",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-07-21T20:42:26Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
