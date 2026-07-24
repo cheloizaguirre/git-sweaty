@@ -2559,5 +2559,18 @@
     "start_date_local": "2026-07-21T20:42:26Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-07-23",
+    "distance": 16785.2,
+    "elevation_gain": 394.0,
+    "id": "19432738663",
+    "moving_time": 4220.0,
+    "name": "Zwift - JOIN: Summit Primer \u2013 Short",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-07-23T16:17:24Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
