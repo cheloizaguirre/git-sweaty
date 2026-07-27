@@ -2585,5 +2585,18 @@
     "start_date_local": "2026-07-25T15:56:22Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-07-26",
+    "distance": 19594.9,
+    "elevation_gain": 310.0,
+    "id": "19473288248",
+    "moving_time": 3806.0,
+    "name": "Zwift - JOIN: Paris Criterium \u2013 Short",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-07-26T15:46:47Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
