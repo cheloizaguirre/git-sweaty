@@ -2624,5 +2624,18 @@
     "start_date_local": "2026-07-30T16:34:01Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-08-01",
+    "distance": 45282.5,
+    "elevation_gain": 351.0,
+    "id": "19557402427",
+    "moving_time": 6733.0,
+    "name": "Zwift - JOIN: 5x 5 min tempo",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-08-01T16:06:08Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
