@@ -2715,5 +2715,18 @@
     "start_date_local": "2026-08-15T15:54:46Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-08-16",
+    "distance": 22873.4,
+    "elevation_gain": 135.0,
+    "id": "19765608011",
+    "moving_time": 3034.0,
+    "name": "Zwift - Race: Stage 1 - Makuri Madness - Mech Isle Mayhem (E)",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-08-16T14:14:36Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
