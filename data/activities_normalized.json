@@ -2754,5 +2754,31 @@
     "start_date_local": "2026-08-22T14:46:52Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-08-26",
+    "distance": 4128.1,
+    "elevation_gain": 32.0,
+    "id": "19912085350",
+    "moving_time": 511.0,
+    "name": "Zwift - Downtown Dolphin in Crit City",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-08-26T20:57:12Z",
+    "type": "VirtualRide",
+    "year": 2026
+  },
+  {
+    "date": "2026-08-26",
+    "distance": 8594.1,
+    "elevation_gain": 168.0,
+    "id": "19912507252",
+    "moving_time": 1513.0,
+    "name": "Zwift - ZG25 Climb Champs in London",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-08-26T21:06:26Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
