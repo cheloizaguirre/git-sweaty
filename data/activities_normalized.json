@@ -2793,5 +2793,31 @@
     "start_date_local": "2026-08-30T15:36:51Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-09-11",
+    "distance": 18580.2,
+    "elevation_gain": 120.0,
+    "id": "20131018381",
+    "moving_time": 2286.0,
+    "name": "ROUVY - Atlantic Road | Norway",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-09-11T17:02:33Z",
+    "type": "VirtualRide",
+    "year": 2026
+  },
+  {
+    "date": "2026-09-11",
+    "distance": 3969.0,
+    "elevation_gain": 5.0,
+    "id": "20131109921",
+    "moving_time": 420.0,
+    "name": "ROUVY - 7 Minute Cool-down",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-09-11T17:41:34Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
