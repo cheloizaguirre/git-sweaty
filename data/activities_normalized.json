@@ -2819,5 +2819,18 @@
     "start_date_local": "2026-09-11T17:41:34Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-09-15",
+    "distance": 26947.2,
+    "elevation_gain": 103.0,
+    "id": "20186407466",
+    "moving_time": 3246.0,
+    "name": "Zwift - Volcano Flat in Watopia",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-09-15T17:26:17Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
