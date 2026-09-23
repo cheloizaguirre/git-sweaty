@@ -2845,5 +2845,18 @@
     "start_date_local": "2026-09-19T15:55:13Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-09-22",
+    "distance": 16134.2,
+    "elevation_gain": 267.0,
+    "id": "20282802302",
+    "moving_time": 2782.0,
+    "name": "Zwift - Climb Portal: Crow Road at 100% Elevation in France",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-09-22T17:14:07Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
