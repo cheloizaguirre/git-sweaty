@@ -2897,5 +2897,18 @@
     "start_date_local": "2026-10-03T15:00:52Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-10-04",
+    "distance": 27610.4,
+    "elevation_gain": 152.0,
+    "id": "20446989716",
+    "moving_time": 4208.0,
+    "name": "ROUVY - 12x 4 min intensive endurance intervals - 2026-10-04",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-10-04T14:11:51Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
