@@ -2249,6 +2249,16 @@
       "subtype": "VirtualRide",
       "type": "VirtualRide",
       "year": 2026
+    },
+    {
+      "date": "2026-10-08",
+      "distance": 23783.7,
+      "elevation_gain": 181.0,
+      "hour": 10,
+      "moving_time": 3040.0,
+      "subtype": "VirtualRide",
+      "type": "VirtualRide",
+      "year": 2026
     }
   ],
   "aggregates": {
@@ -4190,11 +4200,20 @@
           "distance": 23982.5,
           "elevation_gain": 86.0,
           "moving_time": 3119.0
+        },
+        "2026-10-08": {
+          "activity_ids": [
+            "20499192568"
+          ],
+          "count": 1,
+          "distance": 23783.7,
+          "elevation_gain": 181.0,
+          "moving_time": 3040.0
         }
       }
     }
   },
-  "generated_at": "2026-10-08T06:57:17.986088+00:00",
+  "generated_at": "2026-10-09T07:05:47.603273+00:00",
   "other_bucket": "OtherSports",
   "repo": "cheloizaguirre/git-sweaty",
   "source": "strava",
