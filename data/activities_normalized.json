@@ -2949,5 +2949,18 @@
     "start_date_local": "2026-10-10T14:46:37Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-10-12",
+    "distance": 30901.9,
+    "elevation_gain": 86.0,
+    "id": "20558878725",
+    "moving_time": 3738.0,
+    "name": "Zwift - JOIN: 8 min sweet spot + 10 sec seated accelerations",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-10-12T21:26:33Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
