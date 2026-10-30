@@ -3014,5 +3014,31 @@
     "start_date_local": "2026-10-25T15:06:13Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-10-29",
+    "distance": 7128.9,
+    "elevation_gain": 31.0,
+    "id": "20782251610",
+    "moving_time": 905.0,
+    "name": "Zwift - Pacer Group Ride with Mochi",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-10-29T20:40:25Z",
+    "type": "VirtualRide",
+    "year": 2026
+  },
+  {
+    "date": "2026-10-29",
+    "distance": 30159.5,
+    "elevation_gain": 263.0,
+    "id": "20783051040",
+    "moving_time": 3729.0,
+    "name": "Zwift - Group Workout: JOIN x Lanterne Rouge x Zwift: The Indoor Series 2.0",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-10-29T21:00:00Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
