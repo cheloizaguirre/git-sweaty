@@ -3040,5 +3040,18 @@
     "start_date_local": "2026-10-29T21:00:00Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-10-31",
+    "distance": 35694.5,
+    "elevation_gain": 710.0,
+    "id": "20805254575",
+    "moving_time": 6828.0,
+    "name": "Zwift - Climber's Gambit in Watopia",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-10-31T14:52:26Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
