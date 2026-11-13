@@ -3118,5 +3118,18 @@
     "start_date_local": "2026-11-10T16:49:07Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-11-12",
+    "distance": 32668.3,
+    "elevation_gain": 171.0,
+    "id": "20964051729",
+    "moving_time": 3626.0,
+    "name": "Zwift - Group Workout: JOIN x Lanterne Rouge x Zwift: The Indoor Series 2.0",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-11-12T21:00:00Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
