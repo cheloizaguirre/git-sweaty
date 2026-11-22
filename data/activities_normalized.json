@@ -3170,5 +3170,18 @@
     "start_date_local": "2026-11-19T21:04:39Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-11-21",
+    "distance": 33094.5,
+    "elevation_gain": 499.0,
+    "id": "21072783673",
+    "moving_time": 6054.0,
+    "name": "Zwift - Climb Portal: Old Willunga Hill at 100% Elevation in Watopia",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-11-21T16:09:52Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
