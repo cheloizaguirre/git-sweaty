@@ -3183,5 +3183,18 @@
     "start_date_local": "2026-11-21T16:09:52Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-11-24",
+    "distance": 25569.8,
+    "elevation_gain": 240.0,
+    "id": "21111498557",
+    "moving_time": 3930.0,
+    "name": "Zwift - JOIN: Madness",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-11-24T20:28:11Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
