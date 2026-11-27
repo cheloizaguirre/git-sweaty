@@ -3196,5 +3196,31 @@
     "start_date_local": "2026-11-24T20:28:11Z",
     "type": "VirtualRide",
     "year": 2026
+  },
+  {
+    "date": "2026-11-26",
+    "distance": 6894.1,
+    "elevation_gain": 23.0,
+    "id": "21135472614",
+    "moving_time": 894.0,
+    "name": "Zwift - Pacer Group Ride with Taylor",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-11-26T20:40:32Z",
+    "type": "VirtualRide",
+    "year": 2026
+  },
+  {
+    "date": "2026-11-26",
+    "distance": 10552.9,
+    "elevation_gain": 237.0,
+    "id": "21135917547",
+    "moving_time": 1874.0,
+    "name": "Zwift - Race: JOIN x Lanterne Rouge x Zwift: The Indoor Series 2.0",
+    "raw_activity_type": "VirtualRide",
+    "raw_type": "VirtualRide",
+    "start_date_local": "2026-11-26T21:00:32Z",
+    "type": "VirtualRide",
+    "year": 2026
   }
 ]
